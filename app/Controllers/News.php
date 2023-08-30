@@ -10,7 +10,7 @@ class News extends BaseController
   public function index()
   {
       $model = model(NewsModel::class);
-
+      helper('url');
       $data = [
           'news'  => $model->getNews(),
           'title' => 'News archive',
@@ -42,17 +42,23 @@ class News extends BaseController
     {
         helper('form');
 
-        return view('templates/header', ['title' => 'Create a news item'])
+        return view('templates/header', ['title' => 'Edit the news'])
             . view('news/create')
             . view('templates/footer');
     }
 
     public function create()
     {
-        helper('form');
+        $data = $_POST['rowdata'];
+        log_message('info', 'Received AJAX data: ' . print_r($data, true));
 
-        // Checks whether the submitted data passed the validation rules.
-        if (! $this->validate([
+        if(empty($data['title']) || strlen($data['title']) > 255 || strlen($data['title']) < 3 ){
+            return $this->new();
+        }
+        if(empty($data['body']) || strlen($data['body']) > 5000 || strlen($data['body']) < 10){
+            return $this->new();
+        }
+        /*if (! $this->validate([
             'title' => 'required|max_length[255]|min_length[3]',
             'body'  => 'required|max_length[5000]|min_length[10]',
         ])) {
@@ -61,18 +67,58 @@ class News extends BaseController
         }
 
         // Gets the validated data.
-        $post = $this->validator->getValidated();
+        $post = $data->validator->getValidated();*/
 
         $model = model(NewsModel::class);
 
         $model->save([
-            'title' => $post['title'],
-            'slug'  => url_title($post['title'], '-', true),
-            'body'  => $post['body'],
+            'title' => $data['title'],
+            'slug'  => url_title($data['title'], '-', true),
+            'body'  => $data['body'],
         ]);
+    }
 
-        return view('templates/header', ['title' => 'Create a news item'])
-            . view('news/success')
-            . view('templates/footer');
+    //sends news data from the database encoded in json
+    public function getData()
+    {
+        //gets the model
+        $model = model(NewsModel::class);
+        //gets the data from the database
+        $data = $model->getNews();
+
+        //returns the data in json
+        return $this->response->setJSON($data);
+    }
+
+    public function edit()
+    {
+        $data = $_POST['rowdata'];
+        log_message('info', 'Received AJAX data: ' . print_r($data, true));
+
+        if(empty($data['title']) || strlen($data['title']) > 255 || strlen($data['title']) < 3 ){
+            return $this->new();
+        }
+        if(empty($data['body']) || strlen($data['body']) > 5000 || strlen($data['body']) < 10){
+            return $this->new();
+        }
+
+        $model = model(NewsModel::class);
+
+        $model->save([
+            'id' => $data['id'],
+            'title' => $data['title'],
+            'slug'  => url_title($data['title'], '-', true),
+            'body'  => $data['body'],
+        ]);
+    }
+
+    public function remove($id)
+    {
+        /*$data = $_POST['rowdata'];
+        log_message('info', 'Received AJAX data: ' . print_r($data, true));*/
+
+        $model = model(NewsModel::class);
+
+        $model->delete($id);
     }
 }

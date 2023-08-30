@@ -1,18 +1,12 @@
-<h2><?= esc($title) ?></h2>
 
-<?= session()->getFlashdata('error') ?>
-<?= validation_list_errors() ?>
 
-<form action="/news" method="post">
-    <?= csrf_field() ?>
+<div class="container">
+  
+  <table cellpadding="0" cellspacing="0" border="0" class="dataTable table table-striped" id="newsList">
 
-    <label for="title">Title</label>
-    <input type="input" name="title" value="<?= set_value('title') ?>">
-    <br>
+  </table>
 
-    <label for="body">Text</label>
-    <textarea name="body" cols="45" rows="4"><?= set_value('body') ?></textarea>
-    <br>
+</div>
+<?= csrf_field() ?>
 
-    <input type="submit" name="submit" value="Create news item">
-</form>
+<script src="<?= base_url('js/newsListEditor.js') ?>"></script>

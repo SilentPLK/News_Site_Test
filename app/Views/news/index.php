@@ -1,4 +1,4 @@
-<h2><?= esc($title) ?></h2>
+<!--<h2><?= esc($title) ?></h2>
 
 <?php if (! empty($news) && is_array($news)): ?>
 
@@ -19,4 +19,12 @@
 
     <p>Unable to find any news for you.</p>
 
-<?php endif ?>
+<?php endif ?>-->
+<div class="container">
+    <table cellpadding="0" cellspacing="0" border="0" class="dataTable table table-striped" id="newsList">
+
+    </table>
+</div>
+
+
+<script src="<?= base_url('js/newsLister.js') ?>"></script>

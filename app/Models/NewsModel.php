@@ -9,7 +9,7 @@ class NewsModel extends Model
     //tells what database table to use
     protected $table = 'news';
     //tells which fields of the table are safe to update
-    protected $allowedFields = ['title', 'slug', 'body'];
+    protected $allowedFields = ['title', 'slug', 'body', 'id'];
 
     public function getNews($slug = false)
     {
@@ -18,5 +18,10 @@ class NewsModel extends Model
         }
 
         return $this->where(['slug' => $slug])->first();
+    }
+
+    public function delete_row($id){
+        $this->where('id', $id);
+        $this->delete('news');
     }
 }
