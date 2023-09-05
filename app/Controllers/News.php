@@ -112,10 +112,11 @@ class News extends BaseController
         ]);
     }
 
-    public function remove($id)
+    public function remove($id = null)
     {
         /*$data = $_POST['rowdata'];
         log_message('info', 'Received AJAX data: ' . print_r($data, true));*/
+        log_message('information', 'Received id: ' . $id);
 
         $model = model(NewsModel::class);
 

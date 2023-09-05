@@ -16,21 +16,24 @@ var columnDefs = [
   {
     data: "id",
     title: "Id",
-    type: "readonly",
+    type: "number",
+    readonly : true,
   },
   {
     data: "title",
     title: "Title",
+    type: "text",
   },
   {
     data: "slug",
     title: "Slug",
-    type: "readonly",
+    type: "text",
+    readonly : true,
   },
   {
     data: "body",
     title: "Body",
-    type: "text",
+    type: "textarea",
   },
 ];
 
@@ -50,22 +53,35 @@ async function createDataTable(){
     dom: 'Bfrtip',  
     select: 'single',
     responsive: true,
-    altEditor: true,     // Enable altEditor
-    buttons: [{
+    //altEditor: true,     // Enable altEditor
+    buttons: [
+    {
       text: 'Add',
-      name: 'add'        // do not change name
+      name: 'add',
+      action: function(){
+        createForm(columnDefs, "jsonForm")
+      }
     },
     {
       extend: 'selected', // Bind to Selected row
       text: 'Edit',
-      name: 'edit'        // do not change name
+      name: 'edit',
+      action: function (e, dt, button, config) {
+        let selectedData = dt.rows({ selected: true }).data();
+        
+        // Check if any rows are selected
+        if (selectedData.length > 0) {
+          createForm(columnDefs, "jsonForm", selectedData)
+        }
+      }
     },
     {
       extend: 'selected', // Bind to Selected row
       text: 'Delete',
       name: 'delete'      // do not change name
-    }],
-    onAddRow: function(datatable, rowdata, success, error) {
+    }
+    ],
+    /*onAddRow: function(datatable, rowdata, success, error) {
       console.log(rowdata)
       let tempData = {}
       tempData[csrf_name] = csrf_hash
@@ -112,7 +128,7 @@ async function createDataTable(){
         },
         error: error
       });
-    }
+    }*/
   });
 }
 
