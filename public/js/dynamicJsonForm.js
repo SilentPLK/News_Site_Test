@@ -1,5 +1,4 @@
 //function generates jsonform from datatable columndefs
-var test
 function createForm(datatableDefs, formId, data = null){
   //create the base for the jsonform JSON
   let jsonFormObject = {
@@ -44,6 +43,7 @@ function createForm(datatableDefs, formId, data = null){
     jsonFormObject.schema[column.data]["readonly"] = (column.readonly) ? true : false
     jsonFormObject.form.push(column.data)
   });
+  
   //add submit button
   jsonFormObject.form.push(
     {
@@ -51,8 +51,7 @@ function createForm(datatableDefs, formId, data = null){
     "title": "Submit"
     }
   )
-  console.log(jsonFormObject)
-    test = jsonFormObject
+
   if(data){
     //gets the data
     jsonFormObject.value = data[0]
