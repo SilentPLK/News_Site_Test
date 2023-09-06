@@ -15,7 +15,7 @@ class News extends BaseController
       $data = [
           'news'  => $model->getNews(),
           'title' => 'News archive',
-          'configure' => json_encode($this->getTableConfig('News List')),
+          'configure' => $this->getTableConfig('News List'),
       ];
 
       return view('templates/header', $data)
@@ -47,7 +47,7 @@ class News extends BaseController
 
         $data = [
             'title' => 'Edit the news',
-            'configure' => json_encode($configure)
+            'configure' => $configure
         ];
 
         return view('templates/header', $data )
@@ -148,6 +148,6 @@ class News extends BaseController
         }
 
         //returns the data in json
-        return $data;
+        return json_encode($data);
     }
 }
