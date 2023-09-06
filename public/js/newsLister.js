@@ -28,6 +28,11 @@ var newsTable;
 
 // creates the datatable
 function createDataTable(){
+  //convert slugs to links
+  for (const [key, value] of Object.entries(dataSet)) {
+    value.slug = `<a href="/news/${value.slug}">View article</a`
+  }
+
   newsTable = $('#newsList').DataTable({
     "sPaginationType": "full_numbers",
     data: dataSet,
@@ -39,24 +44,7 @@ function createDataTable(){
   });
 }
 
-//fetch the data from the database by calling the controller
-fetch(fullUrl, {
-  method: 'GET',
-})
-.then(response => response.json())
-.then(data => {
-
-  dataSet = data;
-  //change the slug values to be links
-  dataSet.forEach(obj => {
-    obj.slug = `<a href="/news/${obj.slug}">View article</a`
-  });
-  createDataTable()
-
-})
-.catch(error => {
-  console.error('Error fetching data:', error);
-});
+createDataTable()
 
 
 

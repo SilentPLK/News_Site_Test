@@ -12,10 +12,22 @@ class News extends BaseController
   {
       $model = model(NewsModel::class);
       helper('url');
+
+      $configure = $this->getTableConfig('news');
+      $data = $this->getData();
+      
+      //switch out reference column
+      foreach($configure['references'] as &$index){
+          $column = $configure['columnDefs'][$index];
+          $data = $model->getRefColumn($data, $column['data'],$column['reference_table_name'],$column['reference_column_name'], $column['reference_value']);
+
+      }
+
       $data = [
           'news'  => $model->getNews(),
           'title' => 'News archive',
-          'configure' => $this->getTableConfig('News List'),
+          'configure' => json_encode($configure['columnDefs']),
+          'data' => json_encode($data),
       ];
 
       return view('templates/header', $data)
@@ -43,11 +55,25 @@ class News extends BaseController
   public function new()
     {
         helper('form');
-        $configure = $this->getTableConfig('News Editor');
+        $model = model(NewsModel::class);
+        $configure = $this->getTableConfig('news');
+        $data = $this->getData();
+        $newReferences = [];
+        
+        //switch out reference column
+        foreach($configure['references'] as &$index){
+            $column = $configure['columnDefs'][$index];
+            $data = $model->getRefColumn($data, $column['data'],$column['reference_table_name'],$column['reference_column_name'], $column['reference_value']);
+            $newReferences[$column['data']] = $model->getRefList($column['reference_table_name'],$column['reference_column_name'], $column['reference_value']);
+
+        }
+
 
         $data = [
             'title' => 'Edit the news',
-            'configure' => $configure
+            'configure' => json_encode($configure['columnDefs']),
+            'data' => json_encode($data),
+            'references' => json_encode($newReferences)
         ];
 
         return view('templates/header', $data )
@@ -83,6 +109,7 @@ class News extends BaseController
             'title' => $data['title'],
             'slug'  => url_title($data['title'], '-', true),
             'body'  => $data['body'],
+            'category_id' => $data['category_id']
         ]);
     }
 
@@ -94,8 +121,8 @@ class News extends BaseController
         //gets the data from the database
         $data = $model->getNews();
 
-        //returns the data in json
-        return $this->response->setJSON($data);
+        //returns the data
+        return $data;
     }
 
     public function edit()
@@ -117,6 +144,7 @@ class News extends BaseController
             'title' => $data['title'],
             'slug'  => url_title($data['title'], '-', true),
             'body'  => $data['body'],
+            'category_id' => $data['category_id'],
         ]);
     }
 
@@ -138,16 +166,25 @@ class News extends BaseController
         $model = model(dataTableModel::class);
         //gets the data from the database
         $data = $model->getTable($tableName);
-
+        $references = [];
         //remove unnecesary collums for collumnDef
-        foreach($data as &$collumn){
+        foreach($data as $index => &$collumn){
             unset($collumn['id']);
             unset($collumn['meta_table_name']);
-            //convert readonly to true or false
+            
+            //converting to true or false
             $collumn['readonly'] = ($collumn['readonly'] === '1');
+            $collumn['visible'] = ($collumn['show_in_list'] === '1');
+
+            if(!(is_null($collumn['reference_table_name'])) && !(is_null($collumn['reference_column_name'])) && !(is_null($collumn['reference_value']))){
+                array_push($references, $index);
+            }
         }
 
-        //returns the data in json
-        return json_encode($data);
+        return [
+            'columnDefs' => $data,
+            'references' => $references,
+            ];
     }
+
 }

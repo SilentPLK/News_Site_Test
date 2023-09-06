@@ -7,9 +7,6 @@ var inputToken = hiddenInputs[0];
 var csrf_name = inputToken.name;
 var csrf_hash = inputToken.value;
 
-//collumn names
-// {id, title, slug, body}
-var dataSet;
 
 //defining columns
 /*var columnDefs = [
@@ -44,12 +41,11 @@ var newsTable;
 async function createDataTable(){
   newsTable = $('#newsList').DataTable({
     "sPaginationType": "full_numbers",
-    ajax: {
-      url : `${baseUrl}/news/getData`,
-      // our data is an array of objects, in the root node instead of /data node, so we need 'dataSrc' parameter
-      dataSrc : ''
-    },
+    data: dataSet,
     columns: columnDefs,
+    columnDefs : [
+      { targets: 0, searchable: false }
+    ],
     dom: 'Bfrtip',  
     select: 'single',
     responsive: true,

@@ -10,6 +10,10 @@
 <?= csrf_field() ?>
 <form id="jsonForm" style="position:relative; width:80%; left:10%"></form>
 
-<script>var columnDefs = <?= $configure ?> </script>
+<script>
+var columnDefs = <?= $configure ?> 
+var dataSet = <?= $data ?> 
+var references = <?= $references ?>
+</script>
 <script src="<?= base_url('js/newsListEditor.js') ?>"></script>
 <script src="<?= base_url('js/dynamicJsonForm.js') ?>"></script>

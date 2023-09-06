@@ -1,4 +1,5 @@
 //function generates jsonform from datatable columndefs
+var test;
 function createForm(datatableDefs, formId, data = null){
   //create the base for the jsonform JSON
   let jsonFormObject = {
@@ -41,6 +42,30 @@ function createForm(datatableDefs, formId, data = null){
     jsonFormObject.schema[column.data]["title"] = column.title
     jsonFormObject.schema[column.data]["type"] = column.type
     jsonFormObject.schema[column.data]["readonly"] = (column.readonly) ? true : false
+
+    //check for reference collumns and make select field:
+    if(column.reference_value != null){
+      //define enum as array
+      jsonFormObject.schema[column.data]["enum"] = []
+      //loop through the ref values and insert them
+      for(let i = 0; i < references[column.data].length; i++){
+        jsonFormObject.schema[column.data]["enum"].push(references[column.data][i][column.reference_column_name])
+      }
+
+      //showing reference names
+      let formConstruct = {
+        "key" : column.data,
+        "titleMap" : {}
+      }
+
+      for(let i = 0; i < references[column.data].length; i++){
+        formConstruct.titleMap[references[column.data][i][column.reference_column_name]] = references[column.data][i][column.reference_value]
+      }
+      jsonFormObject.form.push(formConstruct);
+      return
+    }
+
+
     jsonFormObject.form.push(column.data)
   });
   
@@ -56,6 +81,8 @@ function createForm(datatableDefs, formId, data = null){
     //gets the data
     jsonFormObject.value = data[0]
   }
+  test = jsonFormObject
+  console.log(jsonFormObject)
   $(`#${formId}`).jsonForm(
     jsonFormObject
   )
