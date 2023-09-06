@@ -12,6 +12,7 @@ use App\Controllers\Pages;
 
 $routes->get('news', [News::class, 'index']);
 //creates a route for the js file to get the database data
+$routes->get('news/getTable', [News::class, 'getTableConfig']);
 $routes->get('news/getData', [News::class, 'getData']);
 $routes->get('news/create', [News::class, 'new']);
 $routes->get('news/new', [News::class, 'new']);

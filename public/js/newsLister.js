@@ -7,7 +7,7 @@ const fullUrl = `${baseUrl}/news/getData`;
 var dataSet;
 
 //defining columns
-var columnDefs = [
+/*var columnDefs = [
   {
     data: "title",
     title: "Title",
@@ -21,7 +21,7 @@ var columnDefs = [
     title: "Link",
   },
   
-];
+];*/
 
 // datatable name
 var newsTable;

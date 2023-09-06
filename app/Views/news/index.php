@@ -26,5 +26,5 @@
     </table>
 </div>
 
-
+<script>var columnDefs = <?= $configure ?> </script>
 <script src="<?= base_url('js/newsLister.js') ?>"></script>

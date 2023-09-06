@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\NewsModel;
+use App\Models\dataTableModel;
 use CodeIgniter\Exceptions\PageNotFoundException;
 
 class News extends BaseController
@@ -14,6 +15,7 @@ class News extends BaseController
       $data = [
           'news'  => $model->getNews(),
           'title' => 'News archive',
+          'configure' => json_encode($this->getTableConfig('News List')),
       ];
 
       return view('templates/header', $data)
@@ -41,8 +43,14 @@ class News extends BaseController
   public function new()
     {
         helper('form');
+        $configure = $this->getTableConfig('News Editor');
 
-        return view('templates/header', ['title' => 'Edit the news'])
+        $data = [
+            'title' => 'Edit the news',
+            'configure' => json_encode($configure)
+        ];
+
+        return view('templates/header', $data )
             . view('news/create')
             . view('templates/footer');
     }
@@ -121,5 +129,25 @@ class News extends BaseController
         $model = model(NewsModel::class);
 
         $model->delete($id);
+    }
+
+
+    //datatable block
+    public function getTableConfig($tableName = null){
+        //gets the model
+        $model = model(dataTableModel::class);
+        //gets the data from the database
+        $data = $model->getTable($tableName);
+
+        //remove unnecesary collums for collumnDef
+        foreach($data as &$collumn){
+            unset($collumn['id']);
+            unset($collumn['meta_table_name']);
+            //convert readonly to true or false
+            $collumn['readonly'] = ($collumn['readonly'] === '1');
+        }
+
+        //returns the data in json
+        return $data;
     }
 }

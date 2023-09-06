@@ -12,7 +12,7 @@ var csrf_hash = inputToken.value;
 var dataSet;
 
 //defining columns
-var columnDefs = [
+/*var columnDefs = [
   {
     data: "id",
     title: "Id",
@@ -35,7 +35,7 @@ var columnDefs = [
     title: "Body",
     type: "textarea",
   },
-];
+];*/
 
 // datatable name
 var newsTable;
