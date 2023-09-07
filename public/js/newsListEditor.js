@@ -1,6 +1,6 @@
 //make the url to get database data
 const baseUrl = `http://localhost:8080`;
-
+var tempData;
 //get csrf token for validation
 var hiddenInputs = document.querySelectorAll('input[type="hidden"]');
 var inputToken = hiddenInputs[0];
@@ -55,7 +55,10 @@ async function createDataTable(){
       text: 'Add',
       name: 'add',
       action: function(){
-        createForm(columnDefs, "jsonForm")
+        let tempColumnDef = columnDefs
+          tempColumnDef.shift()
+          console.log(tempColumnDef)
+        createForm(tempColumnDef, "jsonForm")
         $('#myModalLabel').text('Create news');
         $('#jsonModal').modal('show');
       }
@@ -69,16 +72,48 @@ async function createDataTable(){
         
         // Check if any rows are selected
         if (selectedData.length > 0) {
-          createForm(columnDefs, "jsonForm", selectedData)
+          let tempColumnDef = columnDefs
+          tempColumnDef.shift()
+          console.log(tempColumnDef)
+          createForm(tempColumnDef, "jsonForm", selectedData)
           $('#myModalLabel').text('Edit the news');
           $('#jsonModal').modal('show');
         }
       }
     },
     {
-      extend: 'selected', // Bind to Selected row
       text: 'Delete',
-      name: 'delete'      // do not change name
+      name: 'delete',
+      action: function(){
+        let selectedData = [];
+
+        // Iterate through each checkbox
+        $('input[name="delete"]:checked').each(function () {
+          let row = $(this).closest('tr');
+          let rowData = newsTable.row(row).data();
+          selectedData.push(rowData);
+        });
+
+        tempData = {}
+        tempData[csrf_name] = csrf_hash
+        tempData['rowdata'] = selectedData
+        console.log(tempData)
+        $.ajax({
+          url: `${baseUrl}/news/deleteNews`,
+          contentType: 'application/json',
+          type: 'DELETE',
+          data: JSON.stringify(tempData),
+          success: function(){
+            //refresh the page to regenerate csrf token
+            location.reload()
+          },
+          error: function(){
+            //refresh the page to regenerate csrf token
+            location.reload()
+          },
+        });
+        
+      }
     }
     ],
     /*onAddRow: function(datatable, rowdata, success, error) {
@@ -131,5 +166,16 @@ async function createDataTable(){
     }*/
   });
 }
+
+//adds checkboxes to the beginning of the datatable
+var extraDef = {
+  data: null,
+  title : "delete",
+  multiple: true,
+  render: function (data, type, row, meta) {
+    return '<input type="checkbox" id="deleteCheck" name="delete"/>';
+  },
+}
+columnDefs.unshift(extraDef)
 
 createDataTable()

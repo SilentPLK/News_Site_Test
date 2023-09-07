@@ -21,8 +21,10 @@ class NewsModel extends Model
     }
 
     public function delete_row($id){
-        //$this->where('id', $id);
-        $this->delete($id);
+        $this->db = \Config\Database::connect();
+        $query = "DELETE FROM news WHERE id = $id";
+        log_message('info', 'Delete query: ' . $query);
+        $this->db->query($query);
     }
 
     public function getRefColumn($setData, $data, $refTable, $refColumn, $refValue){

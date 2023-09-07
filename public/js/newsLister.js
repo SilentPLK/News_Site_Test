@@ -28,10 +28,6 @@ var newsTable;
 
 // creates the datatable
 function createDataTable(){
-  //convert slugs to links
-  for (const [key, value] of Object.entries(dataSet)) {
-    value.slug = `<a href="/news/${value.slug}">View article</a`
-  }
 
   newsTable = $('#newsList').DataTable({
     "sPaginationType": "full_numbers",
@@ -42,7 +38,23 @@ function createDataTable(){
       { targets: 2, searchable: false }
     ],
   });
+
+   // view article through clicking on a listing
+   $(document).on('click', "#newsList tbody tr", function () {
+    // Get the data of the clicked row\
+    let selectedData = []
+    selectedData[0] = newsTable.row(this).data();
+    createForm(columnDefs, "jsonForm", selectedData, true)
+          $('#myModalLabel').text('News article');
+          $('#jsonModal').modal('show');
+    
+  });
+
 }
+
+
+
+
 
 createDataTable()
 

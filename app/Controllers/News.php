@@ -11,24 +11,27 @@ class News extends BaseController
   public function index()
   {
       $model = model(NewsModel::class);
-      helper('url');
+      helper('form');
+        $model = model(NewsModel::class);
+        $configure = $this->getTableConfig('news');
+        $data = $this->getData();
+        $newReferences = [];
+        
+        //switch out reference column
+        foreach($configure['references'] as &$index){
+            $column = $configure['columnDefs'][$index];
+            $data = $model->getRefColumn($data, $column['data'],$column['reference_table_name'],$column['reference_column_name'], $column['reference_value']);
+            $newReferences[$column['data']] = $model->getRefList($column['reference_table_name'],$column['reference_column_name'], $column['reference_value']);
 
-      $configure = $this->getTableConfig('news');
-      $data = $this->getData();
-      
-      //switch out reference column
-      foreach($configure['references'] as &$index){
-          $column = $configure['columnDefs'][$index];
-          $data = $model->getRefColumn($data, $column['data'],$column['reference_table_name'],$column['reference_column_name'], $column['reference_value']);
+        }
 
-      }
 
-      $data = [
-          'news'  => $model->getNews(),
-          'title' => 'News archive',
-          'configure' => json_encode($configure['columnDefs']),
-          'data' => json_encode($data),
-      ];
+        $data = [
+            'title' => 'Edit the news',
+            'configure' => json_encode($configure['columnDefs']),
+            'data' => json_encode($data),
+            'references' => json_encode($newReferences)
+        ];
 
       return view('templates/header', $data)
           . view('news/index')
@@ -148,15 +151,24 @@ class News extends BaseController
         ]);
     }
 
-    public function remove($id = null)
+    public function remove()
     {
-        /*$data = $_POST['rowdata'];
-        log_message('info', 'Received AJAX data: ' . print_r($data, true));*/
-        log_message('information', 'Received id: ' . $id);
+        
+        // Get the JSON data
+        $request = $this->request->getBody();
+
+        // Decode the JSON data
+        $jsonData = json_decode($request, true);
+        log_message('info', 'Received data: ' . print_r($jsonData, true));
 
         $model = model(NewsModel::class);
-
-        $model->delete($id);
+        
+        foreach($jsonData['rowdata'] as $entry){
+            if(isset($entry['id'])){
+                log_message('info', 'id: ' . $entry['id'] );
+                $model->delete_row($entry['id']);
+            }
+        }
     }
 
 

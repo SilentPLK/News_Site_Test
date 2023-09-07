@@ -1,6 +1,6 @@
 //function generates jsonform from datatable columndefs
 var test;
-function createForm(datatableDefs, formId, data = null){
+function createForm(datatableDefs, formId, data = null, disabled = false){
   //create the base for the jsonform JSON
   let jsonFormObject = {
     "schema": {
@@ -36,6 +36,9 @@ function createForm(datatableDefs, formId, data = null){
   //clear out the form element
   document.getElementById(formId).innerHTML = ""
 
+  //gets columns that use ref values
+  let refColumns = []
+
   //parse columnDefs into jsonForm
   datatableDefs.forEach(column => {
     jsonFormObject.schema[column.data] = {}
@@ -43,10 +46,20 @@ function createForm(datatableDefs, formId, data = null){
     jsonFormObject.schema[column.data]["type"] = column.type
     jsonFormObject.schema[column.data]["readonly"] = (column.readonly) ? true : false
 
+    //check if disabled is true and if it is disable all collumns:
+    if(disabled){
+      jsonFormObject.schema[column.data]["readonly"] = true
+    }
     //check for reference collumns and make select field:
     if(column.reference_value != null){
+      if(disabled){
+        jsonFormObject.schema[column.data]["type"] = 'text'
+        return
+      }
+      //add ref column to list:
+      refColumns[refColumns.length] = [column.data, column.reference_value, column.reference_column_name]
       //define enum as array
-      jsonFormObject.schema[column.data]["enum"] = []
+        jsonFormObject.schema[column.data]["enum"] = []
       //loop through the ref values and insert them
       for(let i = 0; i < references[column.data].length; i++){
         jsonFormObject.schema[column.data]["enum"].push(references[column.data][i][column.reference_column_name])
@@ -70,16 +83,28 @@ function createForm(datatableDefs, formId, data = null){
   });
   
   //add submit button
-  jsonFormObject.form.push(
-    {
-    "type": "submit",
-    "title": "Submit"
-    }
-  )
+  if(!disabled){
+    jsonFormObject.form.push(
+      {
+      "type": "submit",
+      "title": "Submit"
+      }
+    )
+  }
+  
 
   if(data){
     //gets the data
     jsonFormObject.value = data[0]
+
+    //switches to the correct values for reference collumns
+    refColumns.forEach(column => {
+      for(let i = 0; i < references[column[0]].length; i++){
+        if(jsonFormObject.value[column[0]] == references[column[0]][i][column[1]]){
+          jsonFormObject.value[column[0]] = references[column[0]][i][column[2]]
+        }
+      }
+    });
   }
   test = jsonFormObject
   console.log(jsonFormObject)
