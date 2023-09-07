@@ -56,6 +56,8 @@ async function createDataTable(){
       name: 'add',
       action: function(){
         createForm(columnDefs, "jsonForm")
+        $('#myModalLabel').text('Create news');
+        $('#jsonModal').modal('show');
       }
     },
     {
@@ -68,6 +70,8 @@ async function createDataTable(){
         // Check if any rows are selected
         if (selectedData.length > 0) {
           createForm(columnDefs, "jsonForm", selectedData)
+          $('#myModalLabel').text('Edit the news');
+          $('#jsonModal').modal('show');
         }
       }
     },

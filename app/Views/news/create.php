@@ -8,7 +8,24 @@
 
 </div>
 <?= csrf_field() ?>
-<form id="jsonForm" style="position:relative; width:80%; left:10%"></form>
+
+
+
+<div class="modal fade" id="jsonModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="myModalLabel">Form Modal</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="jsonForm"></form>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 var columnDefs = <?= $configure ?> 
