@@ -1,6 +1,5 @@
 //make the url to get database data
 const baseUrl = `http://localhost:8080`;
-var tempData;
 //get csrf token for validation
 var hiddenInputs = document.querySelectorAll('input[type="hidden"]');
 var inputToken = hiddenInputs[0];
@@ -94,14 +93,20 @@ async function createDataTable(){
           selectedData.push(rowData);
         });
 
-        tempData = {}
-        tempData[csrf_name] = csrf_hash
+        let tempData = {}
         tempData['rowdata'] = selectedData
         console.log(tempData)
+
+        let queryString = `?${csrf_name}=${csrf_hash}`;
+        tempData.rowdata.forEach(entry => {
+          queryString += `&id[]=${entry.id}`;
+        });
+
+
         $.ajax({
-          url: `${baseUrl}/news/deleteNews`,
+          url: `${baseUrl}/news/deleteNews${queryString}`,
           contentType: 'application/json',
-          type: 'DELETE',
+          type: 'GET',
           data: JSON.stringify(tempData),
           success: function(){
             //refresh the page to regenerate csrf token

@@ -12,7 +12,7 @@
 <body>
     
     <h1><?= esc($title) ?></h1>
-    <script src="https://code.jquery.com/jquery-3.0.0.js" ></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" ></script>
     <script src="https://code.jquery.com/jquery-migrate-3.3.0.js" ></script>
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js" ></script>
     <script src="https://cdn.datatables.net/buttons/1.6.2/js/dataTables.buttons.js" ></script>

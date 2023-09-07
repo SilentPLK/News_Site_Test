@@ -153,21 +153,17 @@ class News extends BaseController
 
     public function remove()
     {
+        // Get the CSRF token from the query string
+        $csrfToken = $this->request->getGet('csrf_test_name');
         
-        // Get the JSON data
-        $request = $this->request->getBody();
-
-        // Decode the JSON data
-        $jsonData = json_decode($request, true);
-        log_message('info', 'Received data: ' . print_r($jsonData, true));
+        // Get the IDs from the query string
+        $ids = $this->request->getGet('id');
 
         $model = model(NewsModel::class);
-        
-        foreach($jsonData['rowdata'] as $entry){
-            if(isset($entry['id'])){
-                log_message('info', 'id: ' . $entry['id'] );
-                $model->delete_row($entry['id']);
-            }
+
+        foreach ($ids as $id) {
+            log_message('info', 'id: ' . $id);
+           $model->delete_row($id);
         }
     }
 

@@ -19,7 +19,7 @@ $routes->get('news/new', [News::class, 'new']);
 
 $routes->post('news/createNews', [News::class, 'create']);
 $routes->post('news/editNews', [News::class, 'edit']);
-$routes->delete('news/deleteNews', [News::class, 'remove']);
+$routes->get('news/deleteNews', [News::class, 'remove']);
 
 $routes->get('news/(:segment)', [News::class, 'show']);
 
