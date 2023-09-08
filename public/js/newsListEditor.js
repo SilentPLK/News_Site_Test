@@ -43,10 +43,9 @@ async function createDataTable(){
     data: dataSet,
     columns: columnDefs,
     columnDefs : [
-      { targets: 0, searchable: false }
+      { targets: [0,1,2,3], searchable: false }
     ],
     dom: 'Bfrtip',  
-    select: 'single',
     responsive: true,
     //altEditor: true,     // Enable altEditor
     buttons: [
@@ -54,30 +53,14 @@ async function createDataTable(){
       text: 'Add',
       name: 'add',
       action: function(){
-        let tempColumnDef = columnDefs
+        let tempColumnDef = columnDefs.slice()
+          
+        extraDef.forEach((element) =>{
           tempColumnDef.shift()
-          console.log(tempColumnDef)
+        })
         createForm(tempColumnDef, "jsonForm")
         $('#myModalLabel').text('Create news');
         $('#jsonModal').modal('show');
-      }
-    },
-    {
-      extend: 'selected', // Bind to Selected row
-      text: 'Edit',
-      name: 'edit',
-      action: function (e, dt, button, config) {
-        let selectedData = dt.rows({ selected: true }).data();
-        
-        // Check if any rows are selected
-        if (selectedData.length > 0) {
-          let tempColumnDef = columnDefs
-          tempColumnDef.shift()
-          console.log(tempColumnDef)
-          createForm(tempColumnDef, "jsonForm", selectedData)
-          $('#myModalLabel').text('Edit the news');
-          $('#jsonModal').modal('show');
-        }
       }
     },
     {
@@ -93,94 +76,186 @@ async function createDataTable(){
           selectedData.push(rowData);
         });
 
-        let tempData = {}
-        tempData['rowdata'] = selectedData
-        console.log(tempData)
+        //modify the confirmation box data:
+        $('#modalTitle').text('Delete Confirmation');
+        $('#modalText').text(`Are you sure you want to delete ${selectedData.length} rows?`);
 
-        let queryString = `?${csrf_name}=${csrf_hash}`;
-        tempData.rowdata.forEach(entry => {
-          queryString += `&id[]=${entry.id}`;
+        //change text if only 1 row is selected
+        if(selectedData.length == 1){
+          $('#modalText').text(`Are you sure you want to delete ${selectedData.length} row?`)
+        }
+
+
+        // create a confirmation box
+        $('#confirmModal').on('click', '#confirmDeleteButton', function() {
+          let tempData = {
+            rowdata: selectedData
+          };
+
+          let queryString = `?${csrf_name}=${csrf_hash}`;
+          //add the id of the row for deletion
+          tempData.rowdata.forEach(entry =>{
+            queryString += `&id[]=${entry.id}`;
+          })
+          
+
+          $.ajax({
+            url: `${baseUrl}/news/deleteNews${queryString}`,
+            contentType: 'application/json',
+            type: 'GET',
+            data: JSON.stringify(tempData),
+            success: function(){
+              // Refresh the page to regenerate CSRF token
+              location.reload();
+            },
+            error: function(){
+              // Refresh the page to regenerate CSRF token
+              location.reload();
+            },
+          });
+
+        // Close the modal after confirmation
+        $('#confirmModal').modal('hide');
         });
 
-
-        $.ajax({
-          url: `${baseUrl}/news/deleteNews${queryString}`,
-          contentType: 'application/json',
-          type: 'GET',
-          data: JSON.stringify(tempData),
-          success: function(){
-            //refresh the page to regenerate csrf token
-            location.reload()
-          },
-          error: function(){
-            //refresh the page to regenerate csrf token
-            location.reload()
-          },
-        });
-        
+      // Open the confirmation modal
+      $('#confirmModal').modal('show');
       }
     }
     ],
-    /*onAddRow: function(datatable, rowdata, success, error) {
-      console.log(rowdata)
-      let tempData = {}
-      tempData[csrf_name] = csrf_hash
-      tempData['rowdata'] = rowdata
-      $.ajax({
-        url: `${baseUrl}/news/createNews`,
-        type: 'POST',
-        data: tempData,
-        success: function(){
-          //refresh the page to regenerate csrf token
-          location.reload()
-        },
-        error: error
-      });
-    },
-    onEditRow: function(datatable, rowdata, success, error) {
-      console.log(rowdata)
-      let tempData = {}
-      tempData[csrf_name] = csrf_hash
-      tempData['rowdata'] = rowdata
-      $.ajax({
-        url: `${baseUrl}/news/editNews`,
-        type: 'POST',
-        data: tempData,
-        success: function(){
-          //refresh the page to regenerate csrf token
-          location.reload()
-        },
-        error: error
-      });
-    },
-    onDeleteRow: function(datatable, rowdata, success, error) {
-      console.log(rowdata)
-      let tempData = {}
-      tempData[csrf_name] = csrf_hash
-      tempData['rowdata'] = rowdata
-      $.ajax({
-        url: `${baseUrl}/news/deleteNews/${tempData.rowdata.id}`,
-        type: 'DELETE',
-        data: tempData,
-        success: function(){
-          //refresh the page to regenerate csrf token
-          location.reload()
-        },
-        error: error
-      });
-    }*/
   });
 }
 
-//adds checkboxes to the beginning of the datatable
-var extraDef = {
-  data: null,
-  title : "delete",
-  multiple: true,
-  render: function (data, type, row, meta) {
-    return '<input type="checkbox" id="deleteCheck" name="delete"/>';
+//adds extra collumns to the datatable
+var extraDef = [
+  {
+    data: null,
+    title : "View",
+    render: function (data, type, row, meta) {
+      return '<button class="btn btn-primary fa fa-eye" id="viewbutton" title="View"></button>';
+    },
   },
-}
-columnDefs.unshift(extraDef)
+  {
+    data: null,
+    title : "Edit",
+    render: function (data, type, row, meta) {
+      return '<button class="btn btn-primary fa fa-pencil" id="editbutton" title="Edit"></button>';
+    },
+  },
+  {
+    data: null,
+    title : "Del",
+    render: function (data, type, row, meta) {
+      return '<a class="delbutton fa fa-minus-square btn btn-danger" id="deletebutton"></a>';
+    },
+  },
+  {
+    data: null,
+    title : "",
+    multiple: true,
+    render: function (data, type, row, meta) {
+      return '<input type="checkbox" id="deleteCheck" name="delete"/>';
+    },
+  },
+]
+
+extraDef.forEach((element) =>{
+  columnDefs.unshift(element)
+})
 
 createDataTable()
+
+
+//adding functionality to inline buttons:
+//edit
+$(document).on('click', "[id^='newsList'] #editbutton", 'tr', function (x) {
+  // Gets the data from the row the button was clicked
+  let tableID = $(this).closest('table').attr('id');
+  let dataTable = $('#' + tableID).DataTable();
+  let selectedData = []
+  // Gets the clicked rows data
+  let row = dataTable.row($(this).closest('tr'));
+  let rowData = row.data();
+
+  let tempColumnDef = columnDefs.slice();
+  extraDef.forEach((element) =>{
+    tempColumnDef.shift()
+  })
+  selectedData[0] = rowData
+  createForm(tempColumnDef, "jsonForm", selectedData)
+  $('#myModalLabel').text('Edit the news');
+  $('#jsonModal').modal('show');
+});
+
+//view
+$(document).on('click', "[id^='newsList'] #viewbutton", 'tr', function (x) {
+  // Gets the data from the row the button was clicked
+  let tableID = $(this).closest('table').attr('id');
+  let dataTable = $('#' + tableID).DataTable();
+  let selectedData = []
+
+  // Gets the clicked rows data
+  let row = dataTable.row($(this).closest('tr'));
+  let rowData = row.data();
+
+  let tempColumnDef = columnDefs.slice();
+  console.log(tempColumnDef)
+  extraDef.forEach((element) =>{
+    tempColumnDef.shift()
+  })
+
+  selectedData[0] = rowData
+
+  createForm(tempColumnDef, "jsonForm", selectedData, true)
+  $('#myModalLabel').text('Article');
+  $('#jsonModal').modal('show');
+});
+
+//delete
+$(document).on('click', "[id^='newsList'] #deletebutton", 'tr', function (x) {
+  let tableID = $(this).closest('table').attr('id');
+  let dataTable = $('#' + tableID).DataTable();
+  let selectedData = []
+  // Gets the clicked rows data
+  let row = dataTable.row($(this).closest('tr'));
+  let rowData = row.data();
+
+  selectedData[0] = rowData
+
+  //modify the confirmation box data:
+  $('#modalTitle').text('Delete Confirmation');
+  $('#modalText').text(`Are you sure you want to delete this row?`);
+
+
+  // create a confirmation box
+  $('#confirmModal').on('click', '#confirmDeleteButton', function() {
+    let tempData = {
+      rowdata: selectedData
+    };
+
+    let queryString = `?${csrf_name}=${csrf_hash}`;
+    //add the id of the row for deletion
+    queryString += `&id[]=${tempData.rowdata[0].id}`;
+
+    $.ajax({
+      url: `${baseUrl}/news/deleteNews${queryString}`,
+      contentType: 'application/json',
+      type: 'GET',
+      data: JSON.stringify(tempData),
+      success: function(){
+        // Refresh the page to regenerate CSRF token
+        location.reload();
+      },
+      error: function(){
+        // Refresh the page to regenerate CSRF token
+        location.reload();
+      },
+    });
+
+    // Close the modal after confirmation
+    $('#confirmModal').modal('hide');
+  });
+
+  // Open the confirmation modal
+  $('#confirmModal').modal('show');
+});

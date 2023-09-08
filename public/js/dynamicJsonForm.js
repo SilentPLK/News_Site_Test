@@ -1,5 +1,4 @@
 //function generates jsonform from datatable columndefs
-var test;
 function createForm(datatableDefs, formId, data = null, disabled = false){
   //create the base for the jsonform JSON
   let jsonFormObject = {
@@ -54,6 +53,7 @@ function createForm(datatableDefs, formId, data = null, disabled = false){
     if(column.reference_value != null){
       if(disabled){
         jsonFormObject.schema[column.data]["type"] = 'text'
+        jsonFormObject.form.push(column.data)
         return
       }
       //add ref column to list:
@@ -106,7 +106,6 @@ function createForm(datatableDefs, formId, data = null, disabled = false){
       }
     });
   }
-  test = jsonFormObject
   console.log(jsonFormObject)
   $(`#${formId}`).jsonForm(
     jsonFormObject
