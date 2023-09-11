@@ -1,5 +1,5 @@
 //function generates jsonform from datatable columndefs
-function createForm(datatableDefs, formId, data = null, disabled = false){
+function createForm(datatableDefs, data = null, disabled = false){
   //create the base for the jsonform JSON
   let jsonFormObject = {
     "schema": {
@@ -31,10 +31,8 @@ function createForm(datatableDefs, formId, data = null, disabled = false){
       });
     }
   }
-  console.log(jsonFormObject.onSubmit)
-  //clear out the form element
-  document.getElementById(formId).innerHTML = ""
 
+  
   //gets columns that use ref values
   let refColumns = []
 
@@ -61,6 +59,7 @@ function createForm(datatableDefs, formId, data = null, disabled = false){
       //define enum as array
         jsonFormObject.schema[column.data]["enum"] = []
       //loop through the ref values and insert them
+      jsonFormObject.schema[column.data]["enum"].push("default")
       for(let i = 0; i < references[column.data].length; i++){
         jsonFormObject.schema[column.data]["enum"].push(references[column.data][i][column.reference_column_name])
       }
@@ -70,6 +69,10 @@ function createForm(datatableDefs, formId, data = null, disabled = false){
         "key" : column.data,
         "titleMap" : {}
       }
+
+      //adding default value
+      formConstruct.titleMap['default'] = ""
+
 
       for(let i = 0; i < references[column.data].length; i++){
         formConstruct.titleMap[references[column.data][i][column.reference_column_name]] = references[column.data][i][column.reference_value]
@@ -106,9 +109,7 @@ function createForm(datatableDefs, formId, data = null, disabled = false){
       }
     });
   }
-  console.log(jsonFormObject)
-  $(`#${formId}`).jsonForm(
-    jsonFormObject
-  )
+  
+  return jsonFormObject
 }
 

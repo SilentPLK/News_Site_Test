@@ -17,6 +17,8 @@ $routes->get('news/getData', [News::class, 'getData']);
 $routes->get('news/create', [News::class, 'new']);
 $routes->get('news/new', [News::class, 'new']);
 
+$routes->get('news/getSubCategoryData', [News::class, 'getSubData']);
+
 $routes->post('news/createNews', [News::class, 'create']);
 $routes->post('news/editNews', [News::class, 'edit']);
 $routes->get('news/deleteNews', [News::class, 'remove']);

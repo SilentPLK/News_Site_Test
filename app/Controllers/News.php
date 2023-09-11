@@ -107,12 +107,18 @@ class News extends BaseController
         $post = $data->validator->getValidated();*/
 
         $model = model(NewsModel::class);
-
+        if($data['category_id'] == 'default'){
+            $data['category_id'] = null;
+        }
+        if($data['category_sub_id'] == 'default'){
+            $data['category_sub_id'] = null;
+        }
         $model->save([
             'title' => $data['title'],
             'slug'  => url_title($data['title'], '-', true),
             'body'  => $data['body'],
-            'category_id' => $data['category_id']
+            'category_id' => $data['category_id'],
+            'category_sub_id' => $data['category_sub_id']
         ]);
     }
 
@@ -141,13 +147,19 @@ class News extends BaseController
         }
 
         $model = model(NewsModel::class);
-
+        if($data['category_id'] == 'default'){
+            $data['category_id'] = null;
+        }
+        if($data['category_sub_id'] == 'default'){
+            $data['category_sub_id'] = null;
+        }
         $model->save([
             'id' => $data['id'],
             'title' => $data['title'],
             'slug'  => url_title($data['title'], '-', true),
             'body'  => $data['body'],
             'category_id' => $data['category_id'],
+            'category_sub_id' => $data['category_sub_id']
         ]);
     }
 
@@ -193,6 +205,15 @@ class News extends BaseController
             'columnDefs' => $data,
             'references' => $references,
             ];
+    }
+
+    public function getSubData(){
+        $model = model(NewsModel::class);
+        
+        $data = $model->getSubCategory();
+
+        //returns the data
+        echo json_encode($data);
     }
 
 }

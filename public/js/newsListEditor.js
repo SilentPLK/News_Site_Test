@@ -58,9 +58,14 @@ async function createDataTable(){
         extraDef.forEach((element) =>{
           tempColumnDef.shift()
         })
-        createForm(tempColumnDef, "jsonForm")
+        document.getElementById("jsonForm").innerHTML = ""
+        $("#jsonForm").jsonForm(
+          createForm(tempColumnDef)
+        )
         $('#myModalLabel').text('Create news');
         $('#jsonModal').modal('show');
+
+        createFiltering()
       }
     },
     {
@@ -166,6 +171,71 @@ extraDef.forEach((element) =>{
 createDataTable()
 
 
+
+//select filtering function
+function createFiltering(initial = false) {
+  let data;
+
+  $.ajax({
+      url: `${baseUrl}/news/getSubCategoryData`,
+      success: function(response) {
+          data = JSON.parse(response)
+          // Get the select elements
+          let categoryIdSelect = document.querySelector('select[name="category_id"]');
+          let categorySubIdSelect = document.querySelector('select[name="category_sub_id"]');
+
+          //if initial value is specified it is used:
+          let initialSubCategoryValue;
+          let change = false
+          if(initial){
+            initialSubCategoryValue = categorySubIdSelect.value;
+          }
+          // Add event listener to detect changes in category_id
+          categoryIdSelect.addEventListener('change', function() {
+              // Get the selected value from category_id
+              let selectedCategoryId = this.value;
+              console.log(this.value)
+              // Disable category_sub_id select if default value is selected, otherwise enable it
+              if (selectedCategoryId === 'default') {
+                  categorySubIdSelect.disabled = true;
+              } else {
+                  categorySubIdSelect.disabled = false;
+              }
+
+              // Clear existing options in category_sub_id select
+              categorySubIdSelect.innerHTML = '';
+
+
+              // If a non-default category is selected, filter and populate options in category_sub_id
+              if (selectedCategoryId !== 'default') {
+                  let filteredData = data.filter(item => item.category_id === selectedCategoryId);
+                  filteredData.forEach(item => {
+                      let option = document.createElement('option');
+                      option.value = item.id;
+                      option.textContent = item.sub_category;
+                      categorySubIdSelect.appendChild(option);
+                  });
+              }
+              if(initial && !change){
+                categorySubIdSelect.value = initialSubCategoryValue;
+                change = true
+              }
+          });
+
+          //launch the event listener for initial value
+          categoryIdSelect.dispatchEvent(new Event('change'));
+
+      },
+      error: function() {
+          location.reload();
+      },
+  });
+
+}
+
+
+
+
 //adding functionality to inline buttons:
 //edit
 $(document).on('click', "[id^='newsList'] #editbutton", 'tr', function (x) {
@@ -182,10 +252,24 @@ $(document).on('click', "[id^='newsList'] #editbutton", 'tr', function (x) {
     tempColumnDef.shift()
   })
   selectedData[0] = rowData
-  createForm(tempColumnDef, "jsonForm", selectedData)
+
+  document.getElementById("jsonForm").innerHTML = ""
+  $("#jsonForm").jsonForm(
+    createForm(tempColumnDef, selectedData)
+  )
+
   $('#myModalLabel').text('Edit the news');
   $('#jsonModal').modal('show');
+
+    createFiltering(true)
 });
+
+
+
+
+
+
+
 
 //view
 $(document).on('click', "[id^='newsList'] #viewbutton", 'tr', function (x) {
@@ -206,7 +290,11 @@ $(document).on('click', "[id^='newsList'] #viewbutton", 'tr', function (x) {
 
   selectedData[0] = rowData
 
-  createForm(tempColumnDef, "jsonForm", selectedData, true)
+  document.getElementById("jsonForm").innerHTML = ""
+  $("#jsonForm").jsonForm(
+    createForm(tempColumnDef, selectedData, true)
+  )
+
   $('#myModalLabel').text('Article');
   $('#jsonModal').modal('show');
 });

@@ -44,9 +44,13 @@ function createDataTable(){
     // Get the data of the clicked row\
     let selectedData = []
     selectedData[0] = newsTable.row(this).data();
-    createForm(columnDefs, "jsonForm", selectedData, true)
-          $('#myModalLabel').text('News article');
-          $('#jsonModal').modal('show');
+    document.getElementById("jsonForm").innerHTML = ""
+    $("#jsonForm").jsonForm(
+      createForm(columnDefs, selectedData, true)
+    )
+
+    $('#myModalLabel').text('Article');
+    $('#jsonModal').modal('show');
     
   });
 
