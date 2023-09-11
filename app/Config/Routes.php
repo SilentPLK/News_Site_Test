@@ -9,6 +9,18 @@ $routes->get('/', 'Home::index');
 
 use App\Controllers\News;
 use App\Controllers\Pages;
+use App\Controllers\Image;
+
+//-----------------image-controller-block------------------
+
+$routes->get('upload', [Image::class, 'view']);
+$routes->get('upload/getImages', [Image::class, 'getImages']);
+$routes->get('upload/deleteImages', [Image::class, 'deleteImages']);
+$routes->post('upload/upload', [Image::class, 'upload']);
+
+//---------------------------------------------------------
+
+//------------------news-controller-block------------------
 
 $routes->get('news', [News::class, 'index']);
 //creates a route for the js file to get the database data
@@ -28,3 +40,8 @@ $routes->get('news/(:segment)', [News::class, 'show']);
 
 $routes->get('pages', [Pages::class, 'index']);
 $routes->get('(:segment)', [Pages::class, 'view']);
+
+//---------------------------------------------------------
+
+
+

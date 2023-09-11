@@ -1,0 +1,16 @@
+/*define max size for previews*/
+.uploaded-image {
+  max-width: 600px;
+  max-height: 300px; 
+  border: 1px solid black;
+}
+/*define styling for file name list*/
+.file-list {
+  list-style-type: disc;
+  margin-left: 20px;
+}
+/* Add margin to create spacing between images */
+.image-spacing {
+  margin-top: 10px; 
+  margin-bottom: 10px; 
+}

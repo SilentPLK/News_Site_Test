@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdn.datatables.net/select/1.3.1/css/select.dataTables.css" />
   <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.5/css/responsive.dataTables.css" />
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" />
+  <link rel="stylesheet" href="<?= base_url('css/multiFileUpload.css')?>"/>
 </head>
 <body>
     
