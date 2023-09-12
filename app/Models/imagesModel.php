@@ -9,7 +9,7 @@ class imagesModel extends Model
     //tells what database table to use
     protected $table = 'images';
     //tells which fields of the table are safe to update
-    protected $allowedFields = ['name', 'url', 'type'];
+    protected $allowedFields = ['name', 'url', 'type', 'news_id'];
 
     public function getImageData($id = false)
     {
@@ -17,7 +17,10 @@ class imagesModel extends Model
             return $this->findAll();
         }
 
-        return $this->find($id);
+    $this->db = \Config\Database::connect();
+      $query = "SELECT id, url FROM images WHERE news_id = ?";
+      $param = $id;
+      return $this->db->query($query, $param)->getResult();
     }
 
     public function delete_row($id){

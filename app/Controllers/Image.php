@@ -89,10 +89,17 @@ class Image extends BaseController
     }
 
     public function getImages(){
-      $model = model(imagesModel::class);
+      $id = $this->request->getVar('id');
 
-      $data = $model->getImageData();
+      $model = new ImagesModel();
 
+      if ($id !== null) {
+        $data = $model->getImageData($id);
+      } else {
+        $data = $model->getImageData();
+      }
+
+      log_message('info', print_r($data, true));
       echo json_encode($data);
     }
 

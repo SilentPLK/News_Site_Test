@@ -23,6 +23,10 @@ $routes->post('upload/upload', [Image::class, 'upload']);
 //------------------news-controller-block------------------
 
 $routes->get('news', [News::class, 'index']);
+
+//displaying file content:
+$routes->get('news/file/(:segment)', [News::class, 'openFile']);
+
 //creates a route for the js file to get the database data
 $routes->get('news/getTable', [News::class, 'getTableConfig']);
 $routes->get('news/getData', [News::class, 'getData']);

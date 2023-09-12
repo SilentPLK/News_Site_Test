@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\NewsModel;
 use App\Models\dataTableModel;
+use App\Models\imagesModel;
 use CodeIgniter\Exceptions\PageNotFoundException;
 
 class News extends BaseController
@@ -47,7 +48,7 @@ class News extends BaseController
       if (empty($data['news'])) {
           throw new PageNotFoundException('Cannot find the news item: ' . $slug);
       }
-
+      
       $data['title'] = $data['news']['title'];
 
       return view('templates/header', $data)
@@ -70,7 +71,7 @@ class News extends BaseController
             $newReferences[$column['data']] = $model->getRefList($column['reference_table_name'],$column['reference_column_name'], $column['reference_value']);
 
         }
-
+        
 
         $data = [
             'title' => 'Edit the news',
@@ -86,40 +87,68 @@ class News extends BaseController
 
     public function create()
     {
-        $data = $_POST['rowdata'];
+        $data = $_POST;
+        $data = json_decode($data['rowdata']);
         log_message('info', 'Received AJAX data: ' . print_r($data, true));
 
-        if(empty($data['title']) || strlen($data['title']) > 255 || strlen($data['title']) < 3 ){
+        if (empty($data->title) || strlen($data->title) > 255 || strlen($data->title) < 3) {
             return $this->new();
         }
-        if(empty($data['body']) || strlen($data['body']) > 5000 || strlen($data['body']) < 10){
-            return $this->new();
-        }
-        /*if (! $this->validate([
-            'title' => 'required|max_length[255]|min_length[3]',
-            'body'  => 'required|max_length[5000]|min_length[10]',
-        ])) {
-            // The validation fails, so returns the form.
+        if (empty($data->body) || strlen($data->body) > 5000 || strlen($data->body) < 10) {
             return $this->new();
         }
 
-        // Gets the validated data.
-        $post = $data->validator->getValidated();*/
-
+        
         $model = model(NewsModel::class);
-        if($data['category_id'] == 'default'){
-            $data['category_id'] = null;
+        if ($data->category_id == 'default') {
+            $data->category_id = null;
         }
-        if($data['category_sub_id'] == 'default'){
-            $data['category_sub_id'] = null;
+        if ($data->category_sub_id == 'default') {
+            $data->category_sub_id = null;
         }
+
         $model->save([
-            'title' => $data['title'],
-            'slug'  => url_title($data['title'], '-', true),
-            'body'  => $data['body'],
-            'category_id' => $data['category_id'],
-            'category_sub_id' => $data['category_sub_id']
+            'title' => $data->title,
+            'slug' => url_title($data->title, '-', true),
+            'body' => $data->body,
+            'category_id' => $data->category_id,
+            'category_sub_id' => $data->category_sub_id
         ]);
+    
+
+        $newArticleId = $model->getId()[0]->{'MAX(id)'};
+        $model = model(imagesModel::class);
+
+        $files = $this->request->getFiles();
+        log_message('info', "got files: " . print_r($files, true));
+
+        foreach ($files as $file) {
+            foreach($file as $uploadedFile){
+                if (!$uploadedFile->hasMoved()) {
+                    $newName = $uploadedFile->getRandomName();
+                    $filepath = base_url('/uploads//' . $newName);
+                    $uploadedFile->move(ROOTPATH . 'public/uploads', $newName);
+
+                    // gets data for the database
+                    $image = [
+                        'file_name' => $uploadedFile->getClientName(),
+                        'file_url' => $filepath, // You may need to adjust this to the correct URL format
+                        'file_type' => $uploadedFile->getClientMimeType(),
+                        'news_id' => $newArticleId
+                    ];
+
+                    $model->save([
+                        'name' => $image['file_name'],
+                        'url'  => $image['file_url'],
+                        'type'  => $image['file_type'],
+                        'news_id' => $image['news_id']
+                    ]);
+                }
+            }
+        }
+
+        
+
     }
 
     //sends news data from the database encoded in json
@@ -136,31 +165,68 @@ class News extends BaseController
 
     public function edit()
     {
-        $data = $_POST['rowdata'];
+        $data = $_POST;
+        $data = json_decode($data['rowdata']);
         log_message('info', 'Received AJAX data: ' . print_r($data, true));
 
-        if(empty($data['title']) || strlen($data['title']) > 255 || strlen($data['title']) < 3 ){
+        if (empty($data->title) || strlen($data->title) > 255 || strlen($data->title) < 3) {
             return $this->new();
         }
-        if(empty($data['body']) || strlen($data['body']) > 5000 || strlen($data['body']) < 10){
+        if (empty($data->body) || strlen($data->body) > 5000 || strlen($data->body) < 10) {
             return $this->new();
         }
 
+        
         $model = model(NewsModel::class);
-        if($data['category_id'] == 'default'){
-            $data['category_id'] = null;
+        if ($data->category_id == 'default') {
+            $data->category_id = null;
         }
-        if($data['category_sub_id'] == 'default'){
-            $data['category_sub_id'] = null;
+        if ($data->category_sub_id == 'default') {
+            $data->category_sub_id = null;
         }
+
         $model->save([
-            'id' => $data['id'],
-            'title' => $data['title'],
-            'slug'  => url_title($data['title'], '-', true),
-            'body'  => $data['body'],
-            'category_id' => $data['category_id'],
-            'category_sub_id' => $data['category_sub_id']
+            'id' => $data->id,
+            'title' => $data->title,
+            'slug' => url_title($data->title, '-', true),
+            'body' => $data->body,
+            'category_id' => $data->category_id,
+            'category_sub_id' => $data->category_sub_id
         ]);
+    
+
+        $newArticleId = $data->id;
+        $model = model(imagesModel::class);
+
+        $files = $this->request->getFiles();
+        log_message('info', "got files: " . print_r($files, true));
+
+        foreach ($files as $file) {
+            foreach($file as $uploadedFile){
+                if (!$uploadedFile->hasMoved()) {
+                    $newName = $uploadedFile->getRandomName();
+                    $filepath = base_url('/uploads//' . $newName);
+                    $uploadedFile->move(ROOTPATH . 'public/uploads', $newName);
+
+                    // gets data for the database
+                    $image = [
+                        'file_name' => $uploadedFile->getClientName(),
+                        'file_url' => $filepath, // You may need to adjust this to the correct URL format
+                        'file_type' => $uploadedFile->getClientMimeType(),
+                        'news_id' => $newArticleId
+                    ];
+
+                    $model->save([
+                        'name' => $image['file_name'],
+                        'url'  => $image['file_url'],
+                        'type'  => $image['file_type'],
+                        'news_id' => $image['news_id']
+                    ]);
+                }
+            }
+        }
+
+        
     }
 
     public function remove()
@@ -174,7 +240,6 @@ class News extends BaseController
         $model = model(NewsModel::class);
 
         foreach ($ids as $id) {
-            log_message('info', 'id: ' . $id);
            $model->delete_row($id);
         }
     }

@@ -17,18 +17,20 @@ function createForm(datatableDefs, data = null, disabled = false){
       let tempData = {}
       tempData[csrf_name] = csrf_hash
       tempData['rowdata'] = values
+      console.log(values)
       $.ajax({
         url: constructUrl,
         type: 'POST',
         data: tempData,
         success: function(){
           //refresh the page to regenerate csrf token
-          location.reload()
+          //location.reload()
         },
         error: function(){
-          location.reload()
+          //location.reload()
         }
       });
+      
     }
   }
 
@@ -48,7 +50,7 @@ function createForm(datatableDefs, data = null, disabled = false){
       jsonFormObject.schema[column.data]["readonly"] = true
     }
     //check for reference collumns and make select field:
-    if(column.reference_value != null){
+    if(column.reference_value != null && column.type == "string"){
       if(disabled){
         jsonFormObject.schema[column.data]["type"] = 'text'
         jsonFormObject.form.push(column.data)
@@ -112,4 +114,3 @@ function createForm(datatableDefs, data = null, disabled = false){
   
   return jsonFormObject
 }
-

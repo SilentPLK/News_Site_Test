@@ -60,4 +60,11 @@ class NewsModel extends Model
 
         return $this->db->query($query)->getResult();
     }
+
+    public function getId(){
+        $this->db = \Config\Database::connect();
+        $query = "SELECT MAX(id) FROM news";
+    
+        return $this->db->query($query)->getResult();
+    }
 }

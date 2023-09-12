@@ -58,10 +58,27 @@ async function createDataTable(){
         extraDef.forEach((element) =>{
           tempColumnDef.shift()
         })
+        let tempJsonForm = createForm(tempColumnDef)
+        tempJsonForm = addSelectFile(tempJsonForm)
         document.getElementById("jsonForm").innerHTML = ""
         $("#jsonForm").jsonForm(
-          createForm(tempColumnDef)
+          tempJsonForm
         )
+        //change files to multiple
+        let fileInput = document.querySelector('input[name="images"]');
+        fileInput.setAttribute("multiple", "multiple");
+        //adds place for image preview
+        let previewElement = document.createElement("ul");
+        previewElement.classList.add("file-list")
+        
+        fileInput.parentNode.insertBefore(previewElement, fileInput.nextElementSibling)
+
+        //insertAfter(fileInput, `<ul id="imageContainer" class="file-list"></ul><br></br>`)
+        //add event listener to preview files
+        fileInput.addEventListener('change', function (e) {
+          handleFileUpload(e, previewElement);
+        });
+
         $('#myModalLabel').text('Create news');
         $('#jsonModal').modal('show');
 
@@ -233,9 +250,6 @@ function createFiltering(initial = false) {
 
 }
 
-
-
-
 //adding functionality to inline buttons:
 //edit
 $(document).on('click', "[id^='newsList'] #editbutton", 'tr', function (x) {
@@ -248,28 +262,16 @@ $(document).on('click', "[id^='newsList'] #editbutton", 'tr', function (x) {
   let rowData = row.data();
 
   let tempColumnDef = columnDefs.slice();
+
   extraDef.forEach((element) =>{
     tempColumnDef.shift()
   })
   selectedData[0] = rowData
 
-  document.getElementById("jsonForm").innerHTML = ""
-  $("#jsonForm").jsonForm(
-    createForm(tempColumnDef, selectedData)
-  )
-
-  $('#myModalLabel').text('Edit the news');
-  $('#jsonModal').modal('show');
-
-    createFiltering(true)
+  let tempJsonForm = createForm(tempColumnDef, selectedData)
+  tempJsonForm = addSelectFile(tempJsonForm)
+  addGallery(tempJsonForm)
 });
-
-
-
-
-
-
-
 
 //view
 $(document).on('click', "[id^='newsList'] #viewbutton", 'tr', function (x) {
@@ -347,3 +349,281 @@ $(document).on('click', "[id^='newsList'] #deletebutton", 'tr', function (x) {
   // Open the confirmation modal
   $('#confirmModal').modal('show');
 });
+
+//adds the ability to select files to the form
+function addSelectFile(jsonForm){
+  //remove submit button before adding files field
+  jsonForm.form.pop()
+
+  jsonForm.schema['images'] = {
+    title : "Upload Files",
+    type: 'file',
+  }
+
+  let submit = {
+    title: "Submit",
+    type: "submit",
+  }
+
+  jsonForm.onSubmit = function (errors, values){
+      //check if id is inputted to determine wether to create a new entry or edit a existing one
+      
+      let constructUrl = `${baseUrl}/news/`
+      constructUrl += "createNews"
+      // Create a FormData object
+      let formData = new FormData();
+
+      // Append regular values
+      formData.append(csrf_name, csrf_hash);
+      formData.append('rowdata', JSON.stringify(values));
+
+      // Append files
+      let fileInput = document.querySelector('input[name="images"]');
+      for (let i = 0; i < fileInput.files.length; i++) {
+        formData.append('images[]', fileInput.files[i]);
+      }
+
+      $.ajax({
+        url: constructUrl,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(){
+          //refresh the page to regenerate csrf token
+          location.reload()
+        },
+        error: function(){
+          location.reload()
+        }
+      });
+      
+    }
+    console.log(jsonForm)
+  jsonForm.form.push('images')
+  jsonForm.form.push(submit)
+  return jsonForm
+}
+
+//adds a gallery to the form
+function addGallery(jsonForm, edit = true){
+  let id = jsonForm.value.id
+
+  //get images for gallery
+  let url = `${baseUrl}/upload/getImages?id=${id}`;
+
+  $.ajax({
+    url: url,
+    type: 'GET',
+    success: function(response){
+      
+      response = JSON.parse(response)
+      if(Array.isArray(response) && response.length === 0){
+        console.log('empty')
+        jsonForm.onSubmit = function (errors, values){
+          //check if id is inputted to determine wether to create a new entry or edit a existing one
+          
+          let constructUrl = `${baseUrl}/news/`
+          constructUrl += "editNews"
+          // Create a FormData object
+          let formData = new FormData();
+    
+          // Append regular values
+          formData.append(csrf_name, csrf_hash);
+          formData.append('rowdata', JSON.stringify(values));
+    
+          // Append files
+          let fileInput = document.querySelector('input[name="images"]');
+          for (let i = 0; i < fileInput.files.length; i++) {
+            formData.append('images[]', fileInput.files[i]);
+          }
+    
+          $.ajax({
+            url: constructUrl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(){
+              //refresh the page to regenerate csrf token
+              location.reload()
+            },
+            error: function(){
+              location.reload()
+            }
+          });
+        }
+
+        document.getElementById("jsonForm").innerHTML = ""
+        $("#jsonForm").jsonForm(
+          jsonForm
+        )
+
+        if(edit){
+          
+          //change files to multiple
+          let fileInput = document.querySelector('input[name="images"]');
+          fileInput.setAttribute("multiple", "multiple");
+          //adds place for image preview
+          let previewElement = document.createElement("ul");
+          previewElement.classList.add("file-list")
+        
+          fileInput.parentNode.insertBefore(previewElement, fileInput.nextElementSibling)
+
+          //insertAfter(fileInput, `<ul id="imageContainer" class="file-list"></ul><br></br>`)
+          //add event listener to preview files
+          fileInput.addEventListener('change', function (e) {
+            handleFileUpload(e, previewElement);
+          });
+        }
+      } else {
+        jsonForm.form.pop()
+
+        // Create an array field for the gallery images with checkboxes
+        jsonForm.schema['gallery'] = {
+          type: "array",
+          title: "Options",
+          items: {
+            type: "string",
+            title: "Option",
+            enum: []
+          }
+        };
+
+        galleyForm = {
+          key: "gallery",
+          type: "checkboxes",
+          titleMap: {}
+        }
+        response.forEach(image=>{
+          jsonForm.schema.gallery.items.enum.push(image.id)
+          galleyForm.titleMap[image.id] = `<img class="uploaded-image" src="${image.url}"></img>`
+        })
+
+        
+
+        jsonForm.form.push(galleyForm);
+
+        let submit = {
+          title: 'Submit',
+          type: 'submit',
+        };
+
+        jsonForm.form.push(submit);
+
+        //change the submit function to commmodate the added forms:
+        if(edit){
+          jsonForm.onSubmit = function (errors, values){
+            //check if id is inputted to determine wether to create a new entry or edit a existing one
+            
+            let constructUrl = `${baseUrl}/news/`
+            constructUrl += "editNews"
+            // Create a FormData object
+            let formData = new FormData();
+      
+            // Append regular values
+            formData.append(csrf_name, csrf_hash);
+            formData.append('rowdata', JSON.stringify(values));
+      
+            // Append files
+            let fileInput = document.querySelector('input[name="images"]');
+            for (let i = 0; i < fileInput.files.length; i++) {
+              formData.append('images[]', fileInput.files[i]);
+            }
+            
+
+            $.ajax({
+              url: `${baseUrl}/upload/deleteImages?ids=${JSON.stringify(values.gallery)}`,
+              contentType: 'application/json',
+              type: 'GET',
+              success: function(){},
+              error: function(){}
+            });
+
+            $.ajax({
+              url: constructUrl,
+              type: 'POST',
+              data: formData,
+              processData: false,
+              contentType: false,
+              success: function(){
+                //refresh the page to regenerate csrf token
+                //location.reload()
+              },
+              error: function(){
+                //location.reload()
+              }
+            });
+        }
+      }
+        document.getElementById("jsonForm").innerHTML = ""
+        $("#jsonForm").jsonForm(
+        jsonForm
+        )
+        if(edit){
+          //change files to multiple
+          let fileInput = document.querySelector('input[name="images"]');
+          fileInput.setAttribute("multiple", "multiple");
+          //adds place for image preview
+          let previewElement = document.createElement("ul");
+        
+          fileInput.parentNode.insertBefore(previewElement, fileInput.nextElementSibling)
+
+          //insertAfter(fileInput, `<ul id="imageContainer" class="file-list"></ul><br></br>`)
+          //add event listener to preview files
+          fileInput.addEventListener('change', function (e) {
+            handleFileUpload(e, previewElement);
+          });
+        }
+      }
+      
+
+      
+
+      $('#myModalLabel').text('Edit the news');
+      $('#jsonModal').modal('show');
+
+      createFiltering(true)
+    },
+    error: function(){
+      console.log('fail')
+    },
+  })
+
+  
+}
+
+function handleFileUpload(e, previewElement) {
+  let imageContainer = previewElement;
+  // Clear out the previous uploaded content
+  imageContainer.innerHTML = '<h2>Uploaded Files:</h2>';
+
+  let files = e.target.files;
+
+  for (let i = 0; i < files.length; i++) {
+    let file = files[i];
+    console.log(file);
+
+    let listItem = document.createElement('li');
+    let icon = document.createElement('i');
+    
+    if (file.type.startsWith('image/')) {
+      icon.classList.add('fa', 'fa-image');
+      listItem.textContent = ' ' + file.name;
+    } else {
+      icon.classList.add('fa', 'fa-file');
+      listItem.textContent = ' ' + file.name;
+    }
+    
+    listItem.insertBefore(icon, listItem.firstChild);
+    imageContainer.appendChild(listItem);
+
+    if (file.type.startsWith('image/')) {
+      let imgElement = document.createElement('img');
+      imgElement.src = URL.createObjectURL(file);
+      imgElement.classList.add('uploaded-image');
+      imgElement.classList.add('image-spacing');
+      imageContainer.appendChild(imgElement);
+    }
+  }
+}
