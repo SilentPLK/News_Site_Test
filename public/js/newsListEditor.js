@@ -292,10 +292,8 @@ $(document).on('click', "[id^='newsList'] #viewbutton", 'tr', function (x) {
 
   selectedData[0] = rowData
 
-  document.getElementById("jsonForm").innerHTML = ""
-  $("#jsonForm").jsonForm(
-    createForm(tempColumnDef, selectedData, true)
-  )
+  let tempJsonForm = createForm(tempColumnDef, selectedData, true)
+  addGallery(tempJsonForm, false)
 
   $('#myModalLabel').text('Article');
   $('#jsonModal').modal('show');
@@ -489,27 +487,39 @@ function addGallery(jsonForm, edit = true){
             enum: []
           }
         };
-
-        galleyForm = {
+        
+        galleryForm = {
           key: "gallery",
           type: "checkboxes",
           titleMap: {}
         }
+
+        if(!edit){
+          galleryForm['disabled'] = true
+        }
+
         response.forEach(image=>{
           jsonForm.schema.gallery.items.enum.push(image.id)
-          galleyForm.titleMap[image.id] = `<img class="uploaded-image" src="${image.url}"></img>`
+          console.log(image.type)
+          if(image.type != 'image'){
+            galleryForm.titleMap[image.id] = `<i class="fa fa-file"></i> <a href="${baseUrl}/news/file/${image.id}" target="_blank">${image.name}</a>`
+            return
+          }
+          galleryForm.titleMap[image.id] = `<i class="fa fa-image"></i> ${image.name}<br><img class="uploaded-image" src="${image.url}"></img>`
         })
 
-        
 
-        jsonForm.form.push(galleyForm);
+        jsonForm.form.push(galleryForm);
 
         let submit = {
           title: 'Submit',
           type: 'submit',
         };
 
-        jsonForm.form.push(submit);
+        if (edit){
+          jsonForm.form.push(submit);
+        }
+        
 
         //change the submit function to commmodate the added forms:
         if(edit){

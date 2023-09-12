@@ -281,4 +281,53 @@ class News extends BaseController
         echo json_encode($data);
     }
 
+
+    //reads out file contents
+    public function openFile($segment)
+    {
+        // Load the necessary model to interact with the database
+        $model = model(imagesModel::class); // Replace with your actual model class
+
+        // Retrieve the file URL from the database based on the segment (file ID)
+        $fileInfo = $model->getImageData($segment, false);
+        log_message('info', $segment);
+        log_message('info', print_r($fileInfo, true));
+        if (!$fileInfo) {
+            // Handle the case where the file is not found
+            return $this->response->setStatusCode(404)->setBody('File not found');
+        }
+
+        // Get the file URL from the database
+        $fileUrl = $fileInfo[0]->url;
+
+        // Construct the server-side file path using ROOTPATH and the file name from the URL
+        $fileParts = pathinfo($fileUrl);
+        $serverFilePath = ROOTPATH . '/public/uploads/' . $fileParts['basename'];
+
+        // Check if the file exists on the server
+        if (!file_exists($serverFilePath)) {
+            // Handle the case where the file does not exist on the server
+            return $this->response->setStatusCode(404)->setBody('File not found on the server');
+        }
+
+        // Get the file extension from the name column
+        $fileExtension = pathinfo($fileInfo[0]->name, PATHINFO_EXTENSION);
+
+        // Set the appropriate content type for the file based on the extension
+        $contentType = mime_content_type($serverFilePath);
+
+        // Set the response headers to specify the file name and content type
+        $this->response->setHeader('Content-Type', $contentType);
+        $this->response->setHeader('Content-Disposition', 'inline; filename="' . $fileInfo[0]->name . '"');
+
+        // Read the file contents and output it directly to the browser
+        $fileContents = file_get_contents($serverFilePath);
+
+        if ($fileContents === false) {
+            // Handle errors while reading the file
+            return $this->response->setStatusCode(500)->setBody('Error reading file');
+        }
+
+        return $this->response->setBody($fileContents);
+    }
 }
