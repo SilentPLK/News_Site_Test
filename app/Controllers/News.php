@@ -14,12 +14,15 @@ class News extends BaseController
       $model = model(NewsModel::class);
       helper('form');
         $model = model(NewsModel::class);
-        $configure = $this->getTableConfig('news');
+        $configure = $this->getTableConfig();
         $data = $this->getData();
         $newReferences = [];
         
+
         //switch out reference column
         foreach($configure['references'] as &$index){
+            //add in a empty value for the images collumn, so there isnt a warning
+
             $column = $configure['columnDefs'][$index];
             $data = $model->getRefColumn($data, $column['data'],$column['reference_table_name'],$column['reference_column_name'], $column['reference_value']);
             $newReferences[$column['data']] = $model->getRefList($column['reference_table_name'],$column['reference_column_name'], $column['reference_value']);
@@ -159,6 +162,9 @@ class News extends BaseController
         //gets the data from the database
         $data = $model->getNews();
 
+        foreach($data as &$entry){
+            $entry['images'] = " ";
+        }
         //returns the data
         return $data;
     }
@@ -246,11 +252,11 @@ class News extends BaseController
 
 
     //datatable block
-    public function getTableConfig($tableName = null){
+    public function getTableConfig(){
         //gets the model
         $model = model(dataTableModel::class);
         //gets the data from the database
-        $data = $model->getTable($tableName);
+        $data = $model->getTable();
         $references = [];
         //remove unnecesary collums for collumnDef
         foreach($data as $index => &$collumn){

@@ -11,13 +11,9 @@ class dataTableModel extends Model
     //tells which fields of the table are safe to update
     protected $allowedFields = ['id', 'meta_table_name', 'data', 'title', 'type', 'readonly'];
 
-    public function getTable($tableName = false)
+    public function getTable()
     {
-        if ($tableName === false) {
-            return $this->findAll();
-        }
-
-        return $this->where(['meta_table_name' => $tableName])->findAll();
+        return $this->findAll();
     }
 
 }

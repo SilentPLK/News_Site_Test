@@ -1,3 +1,70 @@
+
+JSONForm.fieldTypes['multifile'] = {
+  template: `<div>
+              <input type="file" name="<%= node.name %>" multiple="multiple" onchange="handleFileChange(this)" />
+            </div>
+            <div class="jsonform-multifile-display">
+              <ul name="<%= node.name %>"></ul>
+            </div>`,
+
+  inputfield: true,
+  array: false, 
+
+  fieldtemplate: true,
+
+  getElement: function (el) {
+    return $(el).parent().get(0);
+  },
+
+  onBeforeRender: function (data, node) {
+  },
+
+  onInsert: function (evt, node) {
+    let fileInput = $(node).find('input[type="file"]');
+    
+    fileInput.on('change', function (e) {
+      // Your file handling logic here
+      console.log('File selected:', e.target.files);
+      
+      // Call your custom onChange function
+      testForm.onChange(e, node);
+    });
+  }
+};
+
+function handleFileChange(input) {
+  const imageContainer = document.querySelector(`ul[name="${input.name}"]`);
+  // Clear out the previous uploaded content
+  imageContainer.innerHTML = '';
+
+  const files = input.files;
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+
+    const listItem = document.createElement('li');
+    const icon = document.createElement('i');
+
+    if (file.type.startsWith('image/')) {
+      icon.classList.add('fa', 'fa-image');
+      listItem.textContent = ' ' + file.name;
+    } else {
+      icon.classList.add('fa', 'fa-file');
+      listItem.textContent = ' ' + file.name;
+    }
+
+    listItem.insertBefore(icon, listItem.firstChild);
+    imageContainer.appendChild(listItem);
+
+    if (file.type.startsWith('image/')) {
+      const imgElement = document.createElement('img');
+      imgElement.src = URL.createObjectURL(file);
+      imgElement.classList.add('uploaded-image');
+      imageContainer.appendChild(imgElement);
+    }
+  }
+}
+
 //function generates jsonform from datatable columndefs
 function createForm(datatableDefs, data = null, disabled = false){
   //create the base for the jsonform JSON
@@ -9,29 +76,6 @@ function createForm(datatableDefs, data = null, disabled = false){
       
     ],
     "value": {},
-    onSubmit: function (errors, values){
-      //check if id is inputted to determine wether to create a new entry or edit a existing one
-      let constructUrl = `${baseUrl}/news/`
-      constructUrl += (values.id) ? "editNews" : "createNews"
-      
-      let tempData = {}
-      tempData[csrf_name] = csrf_hash
-      tempData['rowdata'] = values
-      console.log(values)
-      $.ajax({
-        url: constructUrl,
-        type: 'POST',
-        data: tempData,
-        success: function(){
-          //refresh the page to regenerate csrf token
-          //location.reload()
-        },
-        error: function(){
-          //location.reload()
-        }
-      });
-      
-    }
   }
 
   
@@ -83,7 +127,9 @@ function createForm(datatableDefs, data = null, disabled = false){
       return
     }
 
-
+    if(column.type == "multifile" && disabled){
+      return
+    }
     jsonFormObject.form.push(column.data)
   });
   
@@ -111,6 +157,10 @@ function createForm(datatableDefs, data = null, disabled = false){
       }
     });
   }
-  
+  jsonFormObject.schema['testUpload'] = {
+    "type" : "string",
+    "title" : "A field"
+  }
+
   return jsonFormObject
 }
