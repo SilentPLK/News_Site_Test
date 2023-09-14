@@ -63,7 +63,7 @@ class News extends BaseController
     {
         helper('form');
         $model = model(NewsModel::class);
-        $configure = $this->getTableConfig('news');
+        $configure = $this->getTableConfig();
         $data = $this->getData();
         $newReferences = [];
         

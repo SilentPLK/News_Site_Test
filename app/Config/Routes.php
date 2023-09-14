@@ -10,6 +10,12 @@ $routes->get('/', 'Home::index');
 use App\Controllers\News;
 use App\Controllers\Pages;
 use App\Controllers\Image;
+use App\Controllers\FormBuilder;
+
+//-----------------json-form-configure-block-----------------
+$routes->get('jsonform/configure', [FormBuilder::class, 'view']);
+$routes->post('jsonform/upload', [FormBuilder::class, 'upload']);
+
 
 //-----------------image-controller-block------------------
 

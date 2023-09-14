@@ -95,6 +95,41 @@ async function createDataTable(){
           
         }
 
+        tempJsonForm['onSubmit'] = function (errors, values){
+          //check if id is inputted to determine wether to create a new entry or edit a existing one
+          
+          let constructUrl = `${baseUrl}/news/`
+          constructUrl += "createNews"
+          // Create a FormData object
+          let formData = new FormData();
+    
+          // Append regular values
+          formData.append(csrf_name, csrf_hash);
+          formData.append('rowdata', JSON.stringify(values));
+    
+          // Append files
+          let fileInput = document.querySelector('input[name="images"]');
+          for (let i = 0; i < fileInput.files.length; i++) {
+            formData.append('images[]', fileInput.files[i]);
+          }
+          
+
+          $.ajax({
+            url: constructUrl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(){
+              //refresh the page to regenerate csrf token
+              location.reload()
+            },
+            error: function(){
+              location.reload()
+            }
+          });
+          
+        }
         document.getElementById("jsonForm").innerHTML = ""
         $("#jsonForm").jsonForm(
           tempJsonForm
@@ -290,6 +325,7 @@ $(document).on('click', "[id^='newsList'] #editbutton", 'tr', function (x) {
   selectedData[0] = rowData
 
   let tempJsonForm = createForm(tempColumnDef, selectedData)
+  console.log(tempJsonForm)
   addGallery(tempJsonForm)
 
 });
