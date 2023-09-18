@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use CodeIgniter\Exceptions\PageNotFoundException;
 use App\Models\formMetaModel;
+use App\Models\metaDataModel;
 use App\Models\metaModel;
 
 
@@ -69,6 +70,7 @@ class FormBuilder extends BaseController
 
     //new json-form system
 
+    //---------------------------meta_table-defining-section---------------------------------
     public function viewTable()
     {
         $model = model(metaModel::class);
@@ -118,4 +120,61 @@ class FormBuilder extends BaseController
         $model->delete_row($id);
       }
     }
+    //-----------------------------------------------------------------------------------------
+
+
+    //---------------------------meta_data-system-section---------------------------------
+
+    public function viewMetaData(){
+      $model = model(metaDataModel::class);
+      $tableData = $model->getTable();
+      $metaModel = model(metaModel::class);
+      $schemaData = $metaModel->getTable();
+      $data = [
+        'title' => "Meta Data configuration",
+        'dataSet' => json_encode($tableData),
+        'schema' => json_encode($schemaData),
+      ];
+
+      return view('templates/header', $data)
+          . view('Formbuilder/createMetaData')
+          . view('templates/footer');
+    }
+
+    public function removeMeta(){
+      $ids = $this->request->getGet('id');
+
+      $model = model(metaDataModel::class);
+      foreach($ids as $id){
+        $model->delete_row($id);
+      }
+    }
+
+    public function uploadMeta(){
+      $data = $_POST;
+      $data = json_decode($data['rowdata']);
+      $model = model(metaDataModel::class);
+      log_message('info', print_r($data, true));
+
+      if($data->id == "none"){
+        $model->save([
+          'meta_tables_id' => $data->meta_tables_id,
+          'table_name' => $data->tableName,
+          'column_name' => $data->columnName,
+          'column_title' => $data->columnTitle,
+          'json' => json_encode($data->attributeObj),
+        ]);
+      } else {
+        $model->save([
+          'id' => $data->id,
+          'meta_tables_id' => $data->meta_tables_id,
+          'table_name' => $data->tableName,
+          'column_name' => $data->columnName,
+          'column_title' => $data->columnTitle,
+          'json' => json_encode($data->attributeObj),
+        ]);
+      }
+    }
+
+    //-----------------------------------------------------------------------------------------
 }

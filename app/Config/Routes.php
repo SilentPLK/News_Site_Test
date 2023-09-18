@@ -18,6 +18,10 @@ $routes->get('jsonform/configure', [FormBuilder::class, 'viewTable']);
 $routes->get('jsonform/delete', [FormBuilder::class, 'remove']);
 $routes->post('jsonform/upload', [FormBuilder::class, 'upload']);
 
+$routes->get('jsonform/configure/metaData', [FormBuilder::class, 'viewMetaData']);
+$routes->get('jsonform/configure/meta/delete', [FormBuilder::class, 'removeMeta']);
+$routes->post('jsonform/configure/meta/upload', [FormBuilder::class, 'uploadMeta']);
+
 
 //-------------------old-json-form-builder-----------------
 $routes->get('jsonform/deleteold', [FormBuilder::class, 'remove']);
