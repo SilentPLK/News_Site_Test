@@ -21,4 +21,4 @@
   var baseUrl = "<?=base_url()?>"
   var tableData = <?=$tableData?>
 </script>
-<script src="<?=base_url(('js/formBuilder.js'))?>"></script>
+<script src="<?=base_url(('js/formBuilder/formBuilder.js'))?>"></script>

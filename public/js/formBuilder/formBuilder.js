@@ -15,6 +15,10 @@ var jsonFormObject = {
             type: "hidden",
             default: "none"
           },
+          delete: {
+            type: "checkbox",
+            title: "Delete?"
+          },
           table: {
             type: "string",
             title: "Table Name"
@@ -47,11 +51,15 @@ var jsonFormObject = {
       draggable: false,
       items: {
           type: "section",
-          legend: "field {{idx}}",
+          legend: "{{idx}}. {{value}}",
           items: [
-            "fields[].table",
+            {
+              key: "fields[].table",
+              valueInLegend: true
+            },
             "fields[].column",
             "fields[].id",
+            
           {
             type: "array",
             items: {
@@ -62,7 +70,8 @@ var jsonFormObject = {
               ]
             },
             
-          }
+          },
+          "fields[].delete",
         ]
       }
     },
@@ -77,10 +86,14 @@ var jsonFormObject = {
   onSubmit: function (errors, values){
 
     //createa copy of values, so we can modify it
-    let modifiedValues = { ...values };
 
+    let modifiedValues = { ...values };
+    let deletionIds = []
     // Iterate through the fields and modify the entries
     modifiedValues.fields.forEach(entry => {
+      if(entry.delete){
+        deletionIds.push(entry.id)
+      }
       let tempAttributeObject = {};
       for (let i = 0; i < entry.attribute.length; i++) {
         tempAttributeObject[entry.attribute[i]] = entry.attributeValue[i];
@@ -96,14 +109,24 @@ var jsonFormObject = {
     formData.append(csrf_name, csrf_hash);
     formData.append('data', JSON.stringify(modifiedValues));
 
-    
+    console.log(modifiedValues)
     $.ajax({
-      url: `${baseUrl}jsonform/upload`,
+      url: `${baseUrl}jsonform/uploadold`,
       type: 'POST',
       data: formData,
       processData: false,
       contentType: false,
       success: function(){
+
+        //run ajax for deleting entries
+        $.ajax({
+          url: `${baseUrl}jsonform/deleteold?ids=${JSON.stringify(deletionIds)}`,
+          type: 'get',
+          success: function(){},
+          error: function(){}
+        })
+
+
         //refresh the page to regenerate csrf token
         location.reload()
       },

@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use CodeIgniter\Exceptions\PageNotFoundException;
 use App\Models\formMetaModel;
+use App\Models\metaModel;
+
 
 class FormBuilder extends BaseController
 {
@@ -25,8 +27,11 @@ class FormBuilder extends BaseController
             . view('Formbuilder/form')
             . view('templates/footer');
     }
+
     
-    public function upload(){
+
+    
+    public function uploadold(){
       $data = $_POST;
       $data = json_decode($data['data']);
       $model = model(formMetaModel::class);
@@ -50,5 +55,67 @@ class FormBuilder extends BaseController
       }
     }
 
+    public function removeold(){
+      $ids = json_decode($this->request->getGet('ids'));
 
+      $model = model(formMetaModel::class);
+      foreach($ids as $id){
+        if ($id == 'none') { continue; }
+        $model->delete_row($id);
+      }
+    }
+
+
+
+    //new json-form system
+
+    public function viewTable()
+    {
+        $model = model(metaModel::class);
+        $tableData = $model->getTable();
+
+        $data = [
+          'title' => "Form configuration",
+          'dataSet' => json_encode($tableData)
+        ];
+
+        return view('templates/header', $data)
+            . view('Formbuilder/create')
+            . view('templates/footer');
+    }
+
+    public function getData(){
+        $model = model(metaModel::class);
+        return $model->getTable();
+    }
+
+    public function upload(){
+      $data = $_POST;
+      $data = json_decode($data['rowdata']);
+      $model = model(metaModel::class);
+      log_message('info', print_r($data, true));
+
+      if($data->id == "none"){
+        $model->save([
+          'table_name' => $data->tableName,
+          'structure' => json_encode($data->structure),
+        ]);
+      } else {
+        $model->save([
+          'id' => $data->id,
+          'table_name' => $data->tableName,
+          'structure' => json_encode($data->structure),
+        ]);
+      }
+        
+    }
+
+    public function remove(){
+      $ids = $this->request->getGet('id');
+
+      $model = model(metaModel::class);
+      foreach($ids as $id){
+        $model->delete_row($id);
+      }
+    }
 }

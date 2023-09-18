@@ -49,4 +49,4 @@ var dataSet = <?= $data ?>
 var references = <?= $references ?>
 </script>
 <script src="<?= base_url('js/dynamicJsonForm.js') ?>"></script>
-<script src="<?= base_url('js/newsLister.js') ?>"></script>
+<script src="<?= base_url('js/newsList/newsLister.js') ?>"></script>

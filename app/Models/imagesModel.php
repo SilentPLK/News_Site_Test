@@ -35,5 +35,5 @@ class imagesModel extends Model
       $query = "DELETE FROM images WHERE id = ?";
       $param = $id;
       $this->db->query($query, $param);
-  }
+    }
 }

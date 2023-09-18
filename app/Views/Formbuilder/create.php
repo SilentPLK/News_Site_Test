@@ -2,7 +2,7 @@
 
 <div class="container">
   
-  <table cellpadding="0" cellspacing="0" border="0" class="dataTable table table-striped" id="newsList">
+  <table cellpadding="0" cellspacing="0" border="0" class="dataTable table table-striped" id="formList">
 
   </table>
 
@@ -50,9 +50,8 @@
 
 
 <script>
-var columnDefs = <?= $configure ?> 
-var dataSet = <?= $data ?> 
-var references = <?= $references ?>
+const baseUrl = "<?= base_url()?>"
+var dataSet = <?= $dataSet ?> 
 </script>
-<script src="<?= base_url('js/newsList/newsListEditor.js') ?>"></script>
+<script src=<?= base_url('js/formBuilder/formDatatableLister.js')?>></script>
 <script src="<?= base_url('js/dynamicJsonForm.js') ?>"></script>

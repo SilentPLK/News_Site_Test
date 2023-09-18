@@ -12,10 +12,18 @@ use App\Controllers\Pages;
 use App\Controllers\Image;
 use App\Controllers\FormBuilder;
 
-//-----------------json-form-configure-block-----------------
-$routes->get('jsonform/configure', [FormBuilder::class, 'view']);
+//-----------------json-form-configure-block---------------
+
+$routes->get('jsonform/configure', [FormBuilder::class, 'viewTable']);
+$routes->get('jsonform/delete', [FormBuilder::class, 'remove']);
 $routes->post('jsonform/upload', [FormBuilder::class, 'upload']);
 
+
+//-------------------old-json-form-builder-----------------
+$routes->get('jsonform/deleteold', [FormBuilder::class, 'remove']);
+$routes->get('jsonform/configureold', [FormBuilder::class, 'viewold']);
+$routes->post('jsonform/uploadold', [FormBuilder::class, 'uploadold']);
+//---------------------------------------------------------
 
 //-----------------image-controller-block------------------
 

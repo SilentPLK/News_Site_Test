@@ -34,4 +34,4 @@
 <script>
   var baseUrl = "<?= base_url()?>"
 </script>
-<script src="<?= base_url('js/multiFileUpload.js') ?>"></script>
+<script src="<?= base_url('js/fileUpload/multiFileUpload.js') ?>"></script>
