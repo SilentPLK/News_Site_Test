@@ -33,8 +33,9 @@ class NewsModel extends Model
         foreach($setData as &$row){
             $query = "SELECT $refValue FROM $refTable WHERE $refColumn = ?";
             $params = [$row[$data]];
-    
-            $result = $this->db->query($query, $params)->getRow();
+            
+            // Execute the query with the parameters
+            $result = $this->db->query($query, $params)->getRow();      
     
             if ($result) {
                 $row[$data] = $result->$refValue;

@@ -66,12 +66,11 @@ class News extends BaseController
         $configure = $this->getTableConfig();
         $data = $this->getData();
         $newReferences = [];
-        
         //switch out reference column
         foreach($configure['references'] as &$index){
             $column = $configure['columnDefs'][$index];
-            $data = $model->getRefColumn($data, $column['data'],$column['reference_table_name'],$column['reference_column_name'], $column['reference_value']);
-            $newReferences[$column['data']] = $model->getRefList($column['reference_table_name'],$column['reference_column_name'], $column['reference_value']);
+            $data = $model->getRefColumn($data, $column['data'],$column['reference_table_name'],$column['reference_column_name'],$column['reference_value']);
+            $newReferences[$column['data']] = $model->getRefList($column['reference_table_name'],$column['reference_column_name'],$column['reference_value']);
 
         }
         
@@ -256,24 +255,41 @@ class News extends BaseController
         //gets the model
         $model = model(dataTableModel::class);
         //gets the data from the database
-        $data = $model->getTable();
+        $data = $model->getTable("news");
         $references = [];
-        //remove unnecesary collums for collumnDef
-        foreach($data as $index => &$collumn){
-            unset($collumn['id']);
-            unset($collumn['meta_table_name']);
-            
-            //converting to true or false
-            $collumn['readonly'] = ($collumn['readonly'] === '1');
-            $collumn['visible'] = ($collumn['show_in_list'] === '1');
 
-            if(!(is_null($collumn['reference_table_name'])) && !(is_null($collumn['reference_column_name'])) && !(is_null($collumn['reference_value']))){
+        $transformedData = [];
+
+        //remove unnecesary collums for collumnDef
+        foreach($data as $index => &$column){
+            unset($column->id);
+            unset($column->meta_tables_id);
+            $jsonData = json_decode($column->json);
+
+            // Create a dynamic array to hold the properties from $jsonData
+            $dynamicData = [
+                'table_name' => $column->table_name,
+                'data' => $column->column_name,
+                'title' => $column->column_title,
+            ];
+
+            // Include all properties from $jsonData
+            foreach ($jsonData as $property => $value) {
+                $dynamicData[$property] = $value;
+            }
+
+            $transformedData[] = $dynamicData;
+
+
+
+
+            if(!($jsonData->reference_table_name == "") && !($jsonData->reference_column_name == "") && !($jsonData->reference_value  == "")){
                 array_push($references, $index);
             }
         }
 
         return [
-            'columnDefs' => $data,
+            'columnDefs' => $transformedData,
             'references' => $references,
             ];
     }

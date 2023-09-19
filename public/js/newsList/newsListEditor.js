@@ -33,6 +33,9 @@ var csrf_hash = inputToken.value;
   },
 ];*/
 
+columnDefs.forEach((column) => {
+  column['visible'] = (column.show_in_list)
+})
 // datatable name
 var newsTable;
 
