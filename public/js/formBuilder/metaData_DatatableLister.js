@@ -323,6 +323,12 @@ $(document).on('click', "[id^='formList'] #editbutton", 'tr', function(x) {
     tempJsonForm.value = {
         structure: selectedData[0].meta_tables_id
     }
+
+    tempJsonForm.form[1]['onChange'] = function (evt) {onChangeForm(evt)}
+
+
+    document.getElementById("jsonForm").innerHTML = ""
+    console.log(tempJsonForm)
     $("#jsonForm").jsonForm(tempJsonForm)
 
     $('#myModalLabel').text('Edit');
@@ -362,9 +368,15 @@ $(document).on('click', "[id^='formList'] #clonebutton", 'tr', function(x) {
     tempJsonForm.value = {
         structure: selectedData[0].meta_tables_id
     }
+
+    tempJsonForm.form[1]['onChange'] = function (evt) {onChangeForm(evt)}
+
+
+    document.getElementById("jsonForm").innerHTML = ""
+    console.log(tempJsonForm)
     $("#jsonForm").jsonForm(tempJsonForm)
 
-    $('#myModalLabel').text('Create');
+    $('#myModalLabel').text('Edit');
     $('#jsonModal').modal('show');
 });
 
@@ -403,6 +415,7 @@ $(document).on('click', "[id^='formList'] #viewbutton", 'tr', function(x) {
         structure: selectedData[0].meta_tables_id
     }
     tempJsonForm.schema.structure['disabled'] = true
+    document.getElementById("jsonForm").innerHTML = ""
     $("#jsonForm").jsonForm(tempJsonForm)
 
     $('#myModalLabel').text('View');
@@ -488,6 +501,7 @@ function disableAllFields(form) {
   //populate a 2nd jsonform with the choice of the 1st jsonform
 
   function onChangeForm(evt){
+    console.log('fired')
     //gets the id of the chosen structure
     let value = $(evt.target).val();
     let structure
