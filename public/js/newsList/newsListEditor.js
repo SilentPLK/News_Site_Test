@@ -461,7 +461,10 @@ function addGallery(jsonForm, edit = true, disabled = false){
         )
 
       } else {
-        jsonForm.form.pop()
+        if(!disabled){
+          jsonForm.form.pop()
+        }
+        
 
         // Create an array field for the gallery images with checkboxes
         jsonForm.schema['gallery'] = {
@@ -510,48 +513,65 @@ function addGallery(jsonForm, edit = true, disabled = false){
         //change the submit function to commmodate the added forms:
         if(edit){
           jsonForm.onSubmit = function (errors, values){
-            //check if id is inputted to determine wether to create a new entry or edit a existing one
-            
-            let constructUrl = `${baseUrl}/news/`
-            constructUrl += "editNews"
-            // Create a FormData object
-            let formData = new FormData();
-      
-            // Append regular values
-            formData.append(csrf_name, csrf_hash);
-            formData.append('rowdata', JSON.stringify(values));
-      
-            // Append files
-            let fileInput = document.querySelector('input[name="images"]');
-            for (let i = 0; i < fileInput.files.length; i++) {
-              formData.append('images[]', fileInput.files[i]);
-            }
-            
+            let constructUrl1 = `${baseUrl}/news/deleteSubCategoryData?id=${values.id}`
 
             $.ajax({
-              url: `${baseUrl}/upload/deleteImages?ids=${JSON.stringify(values.gallery)}`,
-              contentType: 'application/json',
+              url : constructUrl1,
               type: 'GET',
-              success: function(){},
-              error: function(){}
-            });
-
-            $.ajax({
-              url: constructUrl,
-              type: 'POST',
-              data: formData,
-              processData: false,
-              contentType: false,
               success: function(){
-                //refresh the page to regenerate csrf token
-                location.reload()
+                let constructUrl = `${baseUrl}/news/`
+                constructUrl += "editNews"
+
+                // Update the category_sub_id select2 and get the selected values
+                let category_sub_id_select = $('select[name="category_sub_id"]').select2('data');
+                values.category_sub_id = []
+                for (let i in category_sub_id_select){
+                  values.category_sub_id.push(category_sub_id_select[i]['id'])
+                }
+                        
+                // Create a FormData object
+                let formData = new FormData();
+              
+                // Append regular values
+                formData.append(csrf_name, csrf_hash);
+                formData.append('rowdata', JSON.stringify(values));
+              
+                // Append files
+                let fileInput = document.querySelector('input[name="images"]');
+                for (let i = 0; i < fileInput.files.length; i++) {
+                  formData.append('images[]', fileInput.files[i]);
+                }
+          
+                $.ajax({
+                  url: `${baseUrl}/upload/deleteImages?ids=${JSON.stringify(values.gallery)}`,
+                  contentType: 'application/json',
+                  type: 'GET',
+                  success: function(){},
+                  error: function(){}
+                });
+
+                $.ajax({
+                  url: constructUrl,
+                  type: 'POST',
+                  data: formData,
+                  processData: false,
+                  contentType: false,
+                  success: function(){
+                    //refresh the page to regenerate csrf token
+                    location.reload()
+                  },
+                  error: function(){
+                    location.reload()
+                  }
+                });
               },
               error: function(){
                 location.reload()
               }
-            });
+            })
+          }
         }
-      }
+
         document.getElementById("jsonForm").innerHTML = ""
         $("#jsonForm").jsonForm(
         jsonForm
