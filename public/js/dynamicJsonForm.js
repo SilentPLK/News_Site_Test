@@ -32,6 +32,8 @@ JSONForm.fieldTypes['multifile'] = {
   }
 };
 
+
+
 function handleFileChange(input) {
   const imageContainer = document.querySelector(`ul[name="${input.name}"]`);
   // Clear out the previous uploaded content
@@ -88,24 +90,22 @@ function createForm(datatableDefs, data = null, disabled = false){
     jsonFormObject.schema[column.data]["title"] = column.title
     jsonFormObject.schema[column.data]["type"] = column.type
     jsonFormObject.schema[column.data]["readonly"] = (column.readonly) ? true : false
+    
+    if(column.type == "select" || column.type == "select-multi"){
+      jsonFormObject.schema[column.data]["type"] = 'string'
+    }
 
     //check if disabled is true and if it is disable all collumns:
     if(disabled){
       jsonFormObject.schema[column.data]["readonly"] = true
     }
     //check for reference collumns and make select field:
-    if(column.reference_value != null && column.type == "string"){
-      if(disabled){
-        jsonFormObject.schema[column.data]["type"] = 'text'
-        jsonFormObject.form.push(column.data)
-        return
-      }
+    if(column.reference_value != null && jsonFormObject.schema[column.data]["type"] == "string"){
       //add ref column to list:
       refColumns[refColumns.length] = [column.data, column.reference_value, column.reference_column_name]
       //define enum as array
         jsonFormObject.schema[column.data]["enum"] = []
       //loop through the ref values and insert them
-      jsonFormObject.schema[column.data]["enum"].push("default")
       for(let i = 0; i < references[column.data].length; i++){
         jsonFormObject.schema[column.data]["enum"].push(references[column.data][i][column.reference_column_name])
       }
@@ -116,9 +116,9 @@ function createForm(datatableDefs, data = null, disabled = false){
         "titleMap" : {}
       }
 
-      //adding default value
-      formConstruct.titleMap['default'] = ""
-
+      if(disabled){
+        formConstruct['readonly'] = true
+      }
 
       for(let i = 0; i < references[column.data].length; i++){
         formConstruct.titleMap[references[column.data][i][column.reference_column_name]] = references[column.data][i][column.reference_value]

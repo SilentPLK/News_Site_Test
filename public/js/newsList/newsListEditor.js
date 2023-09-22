@@ -6,7 +6,7 @@ var inputToken = hiddenInputs[0];
 var csrf_name = inputToken.name;
 var csrf_hash = inputToken.value;
 
-
+var data
 //defining columns
 /*var columnDefs = [
   {
@@ -33,8 +33,13 @@ var csrf_hash = inputToken.value;
   },
 ];*/
 
+var selectAreas = []
+
 columnDefs.forEach((column) => {
   column['visible'] = (column.show_in_list)
+  if(column.type == "select" || column.type == "select-multi"){
+    selectAreas[selectAreas.length] = [column.data, (column.type == "select") ? false : true, (column.type == "select") ? true : false]
+  }
 })
 // datatable name
 var newsTable;
@@ -63,85 +68,60 @@ async function createDataTable(){
         })
         let tempJsonForm = createForm(tempColumnDef)
           
-        tempJsonForm['onSubmit'] = function (errors, values){
-          //check if id is inputted to determine wether to create a new entry or edit a existing one
-          
-          let constructUrl = `${baseUrl}/news/`
-          constructUrl += "createNews"
+        tempJsonForm['onSubmit'] = function submitForm(errors, values) {
+          // Check if an ID is inputted to determine whether to create a new entry or edit an existing one
+          let constructUrl = `${baseUrl}/news/`;
+          constructUrl += "createNews"; // Adjust the URL as needed for your use case
+        
+          // Update the category_sub_id select2 and get the selected values
+          let category_sub_id_select = $('select[name="category_sub_id"]').select2('data');
+          values.category_sub_id = []
+          for (let i in category_sub_id_select){
+            values.category_sub_id.push(category_sub_id_select[i]['id'])
+          }
+                  
           // Create a FormData object
           let formData = new FormData();
-    
+        
           // Append regular values
           formData.append(csrf_name, csrf_hash);
           formData.append('rowdata', JSON.stringify(values));
-    
+        
           // Append files
           let fileInput = document.querySelector('input[name="images"]');
           for (let i = 0; i < fileInput.files.length; i++) {
             formData.append('images[]', fileInput.files[i]);
           }
-    
+        
           $.ajax({
             url: constructUrl,
             type: 'POST',
             data: formData,
             processData: false,
             contentType: false,
-            success: function(){
-              //refresh the page to regenerate csrf token
-              location.reload()
+            success: function () {
+              // Refresh the page to regenerate the CSRF token or perform other actions as needed
+              //location.reload();
             },
-            error: function(){
-              location.reload()
+            error: function () {
+              //location.reload();
             }
           });
-          
-        }
-
-        tempJsonForm['onSubmit'] = function (errors, values){
-          //check if id is inputted to determine wether to create a new entry or edit a existing one
-          
-          let constructUrl = `${baseUrl}/news/`
-          constructUrl += "createNews"
-          // Create a FormData object
-          let formData = new FormData();
-    
-          // Append regular values
-          formData.append(csrf_name, csrf_hash);
-          formData.append('rowdata', JSON.stringify(values));
-    
-          // Append files
-          let fileInput = document.querySelector('input[name="images"]');
-          for (let i = 0; i < fileInput.files.length; i++) {
-            formData.append('images[]', fileInput.files[i]);
-          }
-          
-
-          $.ajax({
-            url: constructUrl,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(){
-              //refresh the page to regenerate csrf token
-              location.reload()
-            },
-            error: function(){
-              location.reload()
-            }
-          });
-          
-        }
+        };
         document.getElementById("jsonForm").innerHTML = ""
         $("#jsonForm").jsonForm(
           tempJsonForm
         )
 
+        createFiltering()
+
+        for(let i = 0; i < selectAreas.length; i++){
+          createSelect2Obj(selectAreas[i][0], selectAreas[i][1], selectAreas[i][2])
+        }
+
         $('#myModalLabel').text('Create news');
         $('#jsonModal').modal('show');
 
-        createFiltering()
       }
     },
     {
@@ -249,64 +229,60 @@ createDataTable()
 
 
 //select filtering function
-function createFiltering(initial = false) {
-  let data;
-
+function createFiltering(initial = false, values=false, disable = false) {
   $.ajax({
-      url: `${baseUrl}/news/getSubCategoryData`,
-      success: function(response) {
-          data = JSON.parse(response)
-          // Get the select elements
-          let categoryIdSelect = document.querySelector('select[name="category_id"]');
-          let categorySubIdSelect = document.querySelector('select[name="category_sub_id"]');
+    url: `${baseUrl}/news/getSubCategoryData`,
+    success: function (response) {
+      data = JSON.parse(response);
 
-          //if initial value is specified it is used:
-          let initialSubCategoryValue;
-          let change = false
-          if(initial){
-            initialSubCategoryValue = categorySubIdSelect.value;
-          }
-          // Add event listener to detect changes in category_id
-          categoryIdSelect.addEventListener('change', function() {
-              // Get the selected value from category_id
-              let selectedCategoryId = this.value;
-              console.log(this.value)
-              // Disable category_sub_id select if default value is selected, otherwise enable it
-              if (selectedCategoryId === 'default') {
-                  categorySubIdSelect.disabled = true;
-              } else {
-                  categorySubIdSelect.disabled = false;
-              }
+      // Get the select elements
+      let categoryIdSelect = document.querySelector('select[name="category_id"]');
+      let categorySubIdSelect = document.querySelector('select[name="category_sub_id"]');
 
-              // Clear existing options in category_sub_id select
-              categorySubIdSelect.innerHTML = '';
+      // Add event listener to detect changes in category_id
+      categoryIdSelect.addEventListener('change', function () {
+        // Get the selected value from category_id
+        let selectedCategoryId = this.value;
 
+        // Disable category_sub_id select if default value is selected, otherwise enable it
+        if (selectedCategoryId === 'default') {
+          categorySubIdSelect.disabled = true;
+        } else {
+          categorySubIdSelect.disabled = false;
+        }
 
-              // If a non-default category is selected, filter and populate options in category_sub_id
-              if (selectedCategoryId !== 'default') {
-                  let filteredData = data.filter(item => item.category_id === selectedCategoryId);
-                  filteredData.forEach(item => {
-                      let option = document.createElement('option');
-                      option.value = item.id;
-                      option.textContent = item.sub_category;
-                      categorySubIdSelect.appendChild(option);
-                  });
-              }
-              if(initial && !change){
-                categorySubIdSelect.value = initialSubCategoryValue;
-                change = true
-              }
+        // Clear existing options in category_sub_id select
+        $(categorySubIdSelect).empty();
+
+        // If a non-default category is selected, filter and populate options in category_sub_id
+        if (selectedCategoryId !== 'default') {
+          let filteredData = data.filter(item => item.category_id === selectedCategoryId);
+          filteredData.forEach(item => {
+            let option = new Option(item.sub_category, item.id);
+            $(categorySubIdSelect).append(option);
           });
+        }
 
-          //launch the event listener for initial value
-          categoryIdSelect.dispatchEvent(new Event('change'));
+        // Trigger the change event on the category_sub_id select to refresh Select2
+        $(categorySubIdSelect).trigger('change');
+      });
 
-      },
-      error: function() {
-          location.reload();
-      },
+      // Initialize Select2 for both select fields
+      
+
+      // Launch the event listener for initial value
+      categoryIdSelect.dispatchEvent(new Event('change'));
+      if(values){
+        $('select[name="category_sub_id"]').select2().prop("disabled", disable)
+        $('select[name="category_sub_id"]').select2().prop("placeholder", "Make a selection")
+        $('select[name="category_sub_id"]').select2().val(values).trigger('change');
+      }
+      
+    },
+    error: function () {
+      location.reload();
+    },
   });
-
 }
 
 //adding functionality to inline buttons:
@@ -331,6 +307,8 @@ $(document).on('click', "[id^='newsList'] #editbutton", 'tr', function (x) {
   console.log(tempJsonForm)
   addGallery(tempJsonForm)
 
+  
+
 });
 
 //view
@@ -353,7 +331,7 @@ $(document).on('click', "[id^='newsList'] #viewbutton", 'tr', function (x) {
   selectedData[0] = rowData
 
   let tempJsonForm = createForm(tempColumnDef, selectedData, true)
-  addGallery(tempJsonForm, false)
+  addGallery(tempJsonForm, false, true)
 
   $('#myModalLabel').text('Article');
   $('#jsonModal').modal('show');
@@ -411,7 +389,7 @@ $(document).on('click', "[id^='newsList'] #deletebutton", 'tr', function (x) {
 //adds the ability to select files to the form
 
 //adds a gallery to the form
-function addGallery(jsonForm, edit = true){
+function addGallery(jsonForm, edit = true, disabled = false){
   let id = jsonForm.value.id
 
   //get images for gallery
@@ -425,37 +403,56 @@ function addGallery(jsonForm, edit = true){
       response = JSON.parse(response)
       if(Array.isArray(response) && response.length === 0){
         jsonForm.onSubmit = function (errors, values){
-          //check if id is inputted to determine wether to create a new entry or edit a existing one
-          
-          let constructUrl = `${baseUrl}/news/`
-          constructUrl += "editNews"
-          // Create a FormData object
-          let formData = new FormData();
-    
-          // Append regular values
-          formData.append(csrf_name, csrf_hash);
-          formData.append('rowdata', JSON.stringify(values));
-    
-          // Append files
-          let fileInput = document.querySelector('input[name="images"]');
-          for (let i = 0; i < fileInput.files.length; i++) {
-            formData.append('images[]', fileInput.files[i]);
-          }
-    
+          let constructUrl1 = `${baseUrl}/news/deleteSubCategoryData?id=${values.id}`
+
           $.ajax({
-            url: constructUrl,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
+            url : constructUrl1,
+            type: 'GET',
             success: function(){
-              //refresh the page to regenerate csrf token
-              location.reload()
+              let constructUrl = `${baseUrl}/news/`
+              constructUrl += "editNews"
+
+              // Update the category_sub_id select2 and get the selected values
+              let category_sub_id_select = $('select[name="category_sub_id"]').select2('data');
+              values.category_sub_id = []
+              for (let i in category_sub_id_select){
+                values.category_sub_id.push(category_sub_id_select[i]['id'])
+              }
+                      
+              // Create a FormData object
+              let formData = new FormData();
+            
+              // Append regular values
+              formData.append(csrf_name, csrf_hash);
+              formData.append('rowdata', JSON.stringify(values));
+            
+              // Append files
+              let fileInput = document.querySelector('input[name="images"]');
+              for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append('images[]', fileInput.files[i]);
+              }
+        
+              $.ajax({
+                url: constructUrl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(){
+                  //refresh the page to regenerate csrf token
+                  location.reload()
+                },
+                error: function(){
+                  location.reload()
+                }
+              });
             },
             error: function(){
               location.reload()
             }
-          });
+          })
+          
+          
         }
 
         document.getElementById("jsonForm").innerHTML = ""
@@ -560,14 +557,16 @@ function addGallery(jsonForm, edit = true){
         jsonForm
         )
       }
-      
-
-      
+      let values
+      for(let i = 0; i < selectAreas.length; i++){
+        values = createSelect2Obj(selectAreas[i][0], selectAreas[i][1], selectAreas[i][2], true ,jsonForm.value[selectAreas[i][0]], disabled)
+      }
 
       $('#myModalLabel').text('Edit the news');
       $('#jsonModal').modal('show');
 
-      createFiltering(true)
+      createFiltering(true, values, disabled)
+      
     },
     error: function(){
       console.log('fail')
@@ -575,4 +574,60 @@ function addGallery(jsonForm, edit = true){
   })
 
   
+}
+
+function createSelect2Obj(selectName, multiple = false, event = false, edit = false, values, disabled = false) {
+  let selectElement = document.querySelector(`select[name="${selectName}"]`);
+  let selectJSON = {
+    placeholder: "Make a selection",
+    disabled: disabled
+  };
+
+  if (multiple) {
+    selectElement.setAttribute('multiple', 'multiple');
+  }
+
+  let $selectElement = $(selectElement).select2(selectJSON);
+
+  $selectElement.select2(selectJSON);
+
+  if (event) {
+    // Attach event handler for select2:select event
+    $selectElement.on("select2:select", function (e) {
+      // Handle the select2:select event
+      let selectedValue = e.params.data.id;
+
+      // Filter and update the options in the category_sub_id select2
+      let categorySubIdSelect = document.querySelector('select[name="category_sub_id"]');
+      let $categorySubIdSelect = $(categorySubIdSelect);
+
+      // Clear existing options
+      $categorySubIdSelect.empty();
+
+      // If a non-default category is selected, filter and populate options in category_sub_id
+      if (selectedValue !== 'default') {
+        let filteredData = data.filter(item => item.category_id === selectedValue);
+        filteredData.forEach(item => {
+          let option = new Option(item.sub_category, item.id);
+          $categorySubIdSelect.append(option);
+        });
+      }
+
+      // Trigger the change event to refresh Select2
+      $categorySubIdSelect.trigger('change');
+    });
+  }
+
+  if (edit && values && multiple) {
+    // Split the values string into an array
+    values = values.split(", ");
+  
+    // Map values to their corresponding IDs using references
+    values = values.map(value => {
+      let entry = references.category_sub_id.find(entry => entry.sub_category === value);
+      return entry ? entry.id : value;
+    });
+    return values
+  }
+
 }

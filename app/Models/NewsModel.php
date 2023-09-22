@@ -27,18 +27,46 @@ class NewsModel extends Model
         $this->db->query($query, $param);
     }
 
-    public function getRefColumn($setData, $data, $refTable, $refColumn, $refValue){
+    public function getRefColumn($setData, $data, $refTable, $refColumn, $refValue, $joinerTable = null){
         $this->db = \Config\Database::connect();
     
         foreach($setData as &$row){
-            $query = "SELECT $refValue FROM $refTable WHERE $refColumn = ?";
-            $params = [$row[$data]];
+            if ($joinerTable != "") {
+                $query ="SELECT
+                    n.id AS news_id,
+                    n.title AS news_title,
+                    GROUP_CONCAT(ncs.sub_category SEPARATOR ', ') AS concatenated_value
+                FROM
+                    news AS n
+                LEFT JOIN
+                    $joinerTable AS sj ON n.id = sj.news_id
+                LEFT JOIN
+                    $refTable AS ncs ON sj.news_category_sub_id = ncs.id
+                WHERE
+                    n.id = ?
+                GROUP BY
+                n.id, n.title;";
+
+                $params = [$row['id']];
+
+            } else {
+                $query = "SELECT $refValue AS concatenated_value FROM $refTable WHERE $refTable.$refColumn = ?";
+                $params = [$row[$data]];
+            }
+    
             
+            
+    
             // Execute the query with the parameters
-            $result = $this->db->query($query, $params)->getRow();      
+            $result = $this->db->query($query, $params)->getResult();
     
             if ($result) {
-                $row[$data] = $result->$refValue;
+                $refValues = [];
+                foreach ($result as $item) {
+                    $refValues[] = $item->concatenated_value;
+                }
+                
+                $row[$data] = implode(', ', $refValues);
             }
         }
     
@@ -67,5 +95,25 @@ class NewsModel extends Model
         $query = "SELECT MAX(id) FROM news";
     
         return $this->db->query($query)->getResult();
+    }
+
+    //sub category joiner block
+    public function saveToJoiner($newsId, $subIds){
+        $this->db = \Config\Database::connect();
+        $query = "INSERT INTO sub_category_joiner (news_id, news_category_sub_id)
+        VALUES (?, ?);";
+
+        foreach($subIds as $id){
+            $params = [$newsId, $id];
+
+            $this->db->query($query, $params);
+        }
+    }
+
+    public function deleteJoinerEntry($id){
+        $this->db = \Config\Database::connect();
+        $query = "DELETE FROM sub_category_joiner WHERE news_id = ?";
+        $param = $id;
+        $this->db->query($query, $param);
     }
 }

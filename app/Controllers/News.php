@@ -69,7 +69,8 @@ class News extends BaseController
         //switch out reference column
         foreach($configure['references'] as &$index){
             $column = $configure['columnDefs'][$index];
-            $data = $model->getRefColumn($data, $column['data'],$column['reference_table_name'],$column['reference_column_name'],$column['reference_value']);
+            $data = $model->getRefColumn($data, $column['data'],$column['reference_table_name'],$column['reference_column_name'],$column['reference_value'],$column['joiner_table']);
+            log_message('info', print_r($data, true));
             $newReferences[$column['data']] = $model->getRefList($column['reference_table_name'],$column['reference_column_name'],$column['reference_value']);
 
         }
@@ -92,6 +93,7 @@ class News extends BaseController
         $data = $_POST;
         $data = json_decode($data['rowdata']);
         log_message('info', 'Received AJAX data: ' . print_r($data, true));
+        
 
         if (empty($data->title) || strlen($data->title) > 255 || strlen($data->title) < 3) {
             return $this->new();
@@ -102,25 +104,27 @@ class News extends BaseController
 
         
         $model = model(NewsModel::class);
-        if ($data->category_id == 'default') {
-            $data->category_id = null;
-        }
-        if ($data->category_sub_id == 'default') {
-            $data->category_sub_id = null;
-        }
+
+
+
 
         $model->save([
             'title' => $data->title,
             'slug' => url_title($data->title, '-', true),
             'body' => $data->body,
             'category_id' => $data->category_id,
-            'category_sub_id' => $data->category_sub_id
         ]);
     
 
         $newArticleId = $model->getId()[0]->{'MAX(id)'};
-        $model = model(imagesModel::class);
+        
 
+        //sub category section
+        $model->saveToJoiner($newArticleId, $data->category_sub_id);
+
+
+        //file uploading section
+        $model = model(imagesModel::class);
         $files = $this->request->getFiles();
         log_message('info', "got files: " . print_r($files, true));
 
@@ -186,9 +190,6 @@ class News extends BaseController
         if ($data->category_id == 'default') {
             $data->category_id = null;
         }
-        if ($data->category_sub_id == 'default') {
-            $data->category_sub_id = null;
-        }
 
         $model->save([
             'id' => $data->id,
@@ -196,9 +197,11 @@ class News extends BaseController
             'slug' => url_title($data->title, '-', true),
             'body' => $data->body,
             'category_id' => $data->category_id,
-            'category_sub_id' => $data->category_sub_id
         ]);
-    
+
+        //sub category section
+        $model->saveToJoiner($data->id, $data->category_sub_id);
+
 
         $newArticleId = $data->id;
         $model = model(imagesModel::class);
@@ -246,6 +249,7 @@ class News extends BaseController
 
         foreach ($ids as $id) {
            $model->delete_row($id);
+           $model->deleteJoinerEntry($id);
         }
     }
 
@@ -303,6 +307,11 @@ class News extends BaseController
         echo json_encode($data);
     }
 
+    public function removeSubCategory(){
+        $model = model(NewsModel::class);
+
+        $model->deleteJoinerEntry($this->request->getGet('id'));
+    }
 
     //reads out file contents
     public function openFile($segment)
